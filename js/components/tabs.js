@@ -7,6 +7,7 @@ const ReactDOM = require('react-dom')
 
 const ImmutableComponent = require('./immutableComponent')
 
+const appActions = require('../actions/appActions')
 const windowActions = require('../actions/windowActions')
 const windowStore = require('../stores/windowStore')
 const dragTypes = require('../constants/dragTypes')
@@ -84,7 +85,7 @@ class Tabs extends ImmutableComponent {
     if (e.dataTransfer.files) {
       Array.from(e.dataTransfer.files).forEach((file) => {
         const path = encodeURI(file.path)
-        return windowActions.newFrame({location: path, title: file.name})
+        return appActions.tabCreateRequested({url: path, title: file.name})
       })
     }
   }
@@ -105,7 +106,7 @@ class Tabs extends ImmutableComponent {
     return target.className === this.refs.newTabButton.props.className
   }
   newTab () {
-    windowActions.newFrame()
+    appActions.tabCreateRequested({})
   }
   onNewTabLongPress (target) {
     contextMenus.onNewTabContextMenu(target)

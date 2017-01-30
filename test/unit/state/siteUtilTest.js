@@ -931,14 +931,14 @@ describe('siteUtil', function () {
     })
   })
 
-  describe('toFrameOpts', function () {
+  describe('toCreateProperties', function () {
     it('returns a plain javascript object with location and partitionNumber', function () {
       const siteDetail = Immutable.fromJS({
         location: testUrl1,
         partitionNumber: 5
       })
-      const result = siteUtil.toFrameOpts(siteDetail)
-      assert.equal(result.location, siteDetail.get('location'))
+      const result = siteUtil.toCreateProperties(siteDetail)
+      assert.equal(result.url, siteDetail.get('location'))
       assert.equal(result.partitionNumber, siteDetail.get('partitionNumber'))
     })
   })

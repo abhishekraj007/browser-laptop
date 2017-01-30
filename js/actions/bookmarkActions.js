@@ -5,6 +5,7 @@
 'use strict'
 
 const siteUtil = require('../state/siteUtil')
+const appActions = require('./appActions')
 const windowActions = require('./windowActions')
 const eventUtil = require('../lib/eventUtil')
 const {SWITCH_TO_NEW_TABS} = require('../constants/settings')
@@ -19,7 +20,11 @@ const bookmarkActions = {
     // Only load the first 25 tabs as loaded
     bookmarks
       .forEach((bookmark, i) =>
-        windowActions.newFrame(Object.assign(siteUtil.toFrameOpts(bookmark), {unloaded: i > 25}), getSetting(SWITCH_TO_NEW_TABS)))
+         appActions.tabCreateRequested(
+           Object.assign(siteUtil.toCreateProperties(bookmark), {
+             unloaded: i > 25,
+             active: false
+           }), getSetting(SWITCH_TO_NEW_TABS)))
   },
 
   /**
@@ -30,10 +35,11 @@ const bookmarkActions = {
     const isFolder = siteUtil.isFolder(bookmarkItem)
     if (!isFolder) {
       if (eventUtil.isForSecondaryAction(e)) {
-        windowActions.newFrame({
-          location: bookmarkItem.get('location'),
-          partitionNumber: bookmarkItem && bookmarkItem.get && bookmarkItem.get('partitionNumber') || undefined
-        }, !!e.shiftKey || getSetting(SWITCH_TO_NEW_TABS))
+        appActions.tabCreateRequested({
+          url: bookmarkItem.get('location'),
+          partitionNumber: bookmarkItem && bookmarkItem.get && bookmarkItem.get('partitionNumber') || undefined,
+          active: !!e.shiftKey || getSetting(SWITCH_TO_NEW_TABS)
+        })
       } else {
         windowActions.loadUrl(activeFrame, bookmarkItem.get('location'))
       }

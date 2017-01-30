@@ -30,6 +30,15 @@ const ensureAtLeastOneWindow = (frameOpts) => {
   }
 }
 
+const getCurrentWindowId = () => {
+  if (process.type === 'browser') {
+    return BrowserWindow.getActiveWindow().id
+  } else {
+    const {currentWindowId} = require('../renderer/currentWindow')
+    return currentWindowId
+  }
+}
+
 /**
  * Sends a message to the web contents of the focused window.
  * @param {Object} focusedWindow the focusedWindow if any
@@ -65,15 +74,17 @@ module.exports.quitMenuItem = () => ({
   }
 })
 
-module.exports.newTabMenuItem = (parentFrameKey) => {
+module.exports.newTabMenuItem = (openerTabId) => {
   return {
     label: locale.translation('newTab'),
     accelerator: 'CmdOrCtrl+T',
     click: function (item, focusedWindow) {
-      if (!module.exports.sendToFocusedWindow(focusedWindow, [messages.SHORTCUT_NEW_FRAME, undefined, { parentFrameKey }])) {
-        // no active windows
-        appActions.newWindow()
-      }
+      ensureAtLeastOneWindow(Immutable.fromJS({}))
+      appActions.tabCreateRequested({
+        url: 'about:newtab',
+        windowId: getCurrentWindowId(),
+        openerTabId
+      })
     }
   }
 }
@@ -84,7 +95,11 @@ module.exports.newPrivateTabMenuItem = () => {
     accelerator: 'Shift+CmdOrCtrl+P',
     click: function (item, focusedWindow) {
       ensureAtLeastOneWindow(Immutable.fromJS({ isPrivate: true }))
-      module.exports.sendToFocusedWindow(focusedWindow, [messages.SHORTCUT_NEW_FRAME, undefined, { isPrivate: true }])
+      appActions.tabCreateRequested({
+        url: 'about:newtab',
+        windowId: getCurrentWindowId(),
+        isPrivate: true
+      })
     }
   }
 }
@@ -95,7 +110,11 @@ module.exports.newPartitionedTabMenuItem = () => {
     accelerator: 'Shift+CmdOrCtrl+S',
     click: function (item, focusedWindow) {
       ensureAtLeastOneWindow(Immutable.fromJS({ isPartitioned: true }))
-      module.exports.sendToFocusedWindow(focusedWindow, [messages.SHORTCUT_NEW_FRAME, undefined, { isPartitioned: true }])
+      appActions.tabCreateRequested({
+        url: 'about:newtab',
+        windowId: getCurrentWindowId(),
+        isPartitioned: true
+      })
     }
   }
 }
@@ -166,7 +185,10 @@ module.exports.preferencesMenuItem = () => {
           location: 'about:preferences'
         }))
       } else {
-        module.exports.sendToFocusedWindow(focusedWindow, [messages.SHORTCUT_NEW_FRAME, 'about:preferences', { singleFrame: true }])
+        appActions.maybeCreateTabRequested({
+          url: 'about:preferences',
+          windowId: getCurrentWindowId()
+        })
       }
     }
   }
@@ -182,7 +204,10 @@ module.exports.bookmarksManagerMenuItem = () => {
           location: 'about:bookmarks'
         }))
       } else {
-        module.exports.sendToFocusedWindow(focusedWindow, [messages.SHORTCUT_NEW_FRAME, 'about:bookmarks', { singleFrame: true }])
+        appActions.maybeCreateTabRequested({
+          url: 'about:bookmarks',
+          windowId: getCurrentWindowId()
+        })
       }
     }
   }
@@ -198,7 +223,10 @@ module.exports.historyMenuItem = () => {
           location: 'about:history'
         }))
       } else {
-        module.exports.sendToFocusedWindow(focusedWindow, [messages.SHORTCUT_NEW_FRAME, 'about:history', { singleFrame: true }])
+        appActions.maybeCreateTabRequested({
+          url: 'about:history',
+          windowId: getCurrentWindowId()
+        })
       }
     }
   }
@@ -215,7 +243,10 @@ module.exports.downloadsMenuItem = () => {
         }))
       } else {
         module.exports.sendToFocusedWindow(focusedWindow, [messages.HIDE_DOWNLOADS_TOOLBAR])
-        module.exports.sendToFocusedWindow(focusedWindow, [messages.SHORTCUT_NEW_FRAME, 'about:downloads', { singleFrame: true }])
+        appActions.maybeCreateTabRequested({
+          url: 'about:downloads',
+          windowId: getCurrentWindowId()
+        })
       }
     }
   }
@@ -230,7 +261,10 @@ module.exports.passwordsMenuItem = () => {
           location: 'about:passwords'
         }))
       } else {
-        module.exports.sendToFocusedWindow(focusedWindow, [messages.SHORTCUT_NEW_FRAME, 'about:passwords', { singleFrame: true }])
+        appActions.maybeCreateTabRequested({
+          url: 'about:passwords',
+          windowId: getCurrentWindowId()
+        })
       }
     }
   }
@@ -266,8 +300,10 @@ module.exports.submitFeedbackMenuItem = () => {
   return {
     label: locale.translation('submitFeedback'),
     click: function (item, focusedWindow) {
-      module.exports.sendToFocusedWindow(focusedWindow,
-                                         [messages.SHORTCUT_NEW_FRAME, communityURL])
+      appActions.maybeCreateTabRequested({
+        url: communityURL,
+        windowId: getCurrentWindowId()
+      })
     }
   }
 }
@@ -299,7 +335,10 @@ module.exports.aboutBraveMenuItem = () => {
   return {
     label: locale.translation('aboutApp'),
     click: (item, focusedWindow) => {
-      module.exports.sendToFocusedWindow(focusedWindow, [messages.SHORTCUT_NEW_FRAME, 'about:brave', { singleFrame: true }])
+      appActions.maybeCreateTabRequested({
+        url: 'about:brave',
+        windowId: getCurrentWindowId()
+      })
     }
   }
 }
@@ -322,7 +361,10 @@ module.exports.braveryGlobalMenuItem = () => {
           location: 'about:preferences#shields'
         }))
       } else {
-        module.exports.sendToFocusedWindow(focusedWindow, [messages.SHORTCUT_NEW_FRAME, 'about:preferences#shields', { singleFrame: true }])
+        appActions.maybeCreateTabRequested({
+          url: 'about:preferences#shields',
+          windowId: getCurrentWindowId()
+        })
       }
     }
   }
@@ -341,7 +383,10 @@ module.exports.braveryPaymentsMenuItem = () => {
           location: 'about:preferences#payments'
         }))
       } else {
-        module.exports.sendToFocusedWindow(focusedWindow, [messages.SHORTCUT_NEW_FRAME, 'about:preferences#payments', { singleFrame: true }])
+        appActions.maybeCreateTabRequested({
+          url: 'about:preferences#payments',
+          windowId: getCurrentWindowId()
+        })
       }
     }
   }

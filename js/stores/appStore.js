@@ -31,10 +31,11 @@ const locale = require('../../app/locale')
 const path = require('path')
 const autofill = require('../../app/autofill')
 const nativeImage = require('../../app/nativeImage')
-const Filtering = require('../../app/filtering')
+const filtering = require('../../app/filtering')
 const basicAuth = require('../../app/browser/basicAuth')
 const windows = require('../../app/browser/windows')
 const assert = require('assert')
+const profiles = require('../../app/browser/profiles')
 
 // state helpers
 const basicAuthState = require('../../app/common/state/basicAuthState')
@@ -345,7 +346,7 @@ function handleChangeSettingAction (settingKey, settingValue) {
       })
       break
     case settings.DEFAULT_ZOOM_LEVEL:
-      Filtering.setDefaultZoomLevel(settingValue)
+      filtering.setDefaultZoomLevel(settingValue)
       break
     default:
   }
@@ -377,10 +378,11 @@ const handleAppAction = (action) => {
   switch (action.actionType) {
     case appConstants.APP_SET_STATE:
       appState = action.appState
-      appState = Filtering.init(appState, action, appStore)
+      appState = filtering.init(appState, action, appStore)
       appState = windows.init(appState, action, appStore)
       appState = basicAuth.init(appState, action, appStore)
       appState = webtorrent.init(appState, action, appStore)
+      appState = profiles.init(appState, action, appStore)
       break
     case appConstants.APP_SHUTTING_DOWN:
       shuttingDown = true
@@ -706,15 +708,13 @@ const handleAppAction = (action) => {
       }
       // Site cookies clearing should also clear cache so that evercookies will be properly removed
       if (action.clearDataDetail.get('cachedImagesAndFiles') || action.clearDataDetail.get('allSiteCookies')) {
-        const Filtering = require('../../app/filtering')
-        Filtering.clearCache()
+        filtering.clearCache()
       }
       if (action.clearDataDetail.get('savedPasswords')) {
         handleAppAction({actionType: appConstants.APP_CLEAR_PASSWORDS})
       }
       if (action.clearDataDetail.get('allSiteCookies')) {
-        const Filtering = require('../../app/filtering')
-        Filtering.clearStorageData()
+        filtering.clearStorageData()
       }
       if (action.clearDataDetail.get('autocompleteData')) {
         autofill.clearAutocompleteData()

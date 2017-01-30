@@ -9,6 +9,7 @@ const Immutable = require('immutable')
 const windowStore = require('../stores/windowStore')
 const appStoreRenderer = require('../stores/appStoreRenderer')
 const windowActions = require('../actions/windowActions')
+const appActions = require('../actions/appActions')
 const Main = require('./main')
 const SiteTags = require('../constants/siteTags')
 const cx = require('../lib/classSet')
@@ -41,10 +42,15 @@ class Window extends React.Component {
   componentWillMount () {
     if (!this.props.initWindowState || this.props.initWindowState.frames.length === 0) {
       if (this.props.frames.length === 0) {
-        windowActions.newFrame()
+        appActions.tabCreateRequested({})
       } else {
-        this.props.frames.forEach((frame) => {
-          windowActions.newFrame(frame)
+        this.props.frames.forEach((frame, i) => {
+          appActions.tabCreateRequested({
+            url: frame.location,
+            partitionNumber: frame.partitionNumber,
+            isPrivate: frame.isPrivate,
+            active: i === 0
+          })
         })
       }
     }
@@ -116,12 +122,13 @@ class Window extends React.Component {
             frame.get('pinnedLocation') === site.get('location') &&
             (frame.get('partitionNumber') || 0) === (site.get('partitionNumber') || 0))
       })
-    sitesToAdd.toList().sort(siteSort).forEach((site) => {
-      windowActions.newFrame({
-        location: site.get('location'),
+    sitesToAdd.sort(siteSort).forEach((site) => {
+      appActions.tabCreateRequested({
+        url: site.get('location'),
         partitionNumber: site.get('partitionNumber'),
-        isPinned: true
-      }, false)
+        isPinned: true,
+        active: false
+      })
     })
 
     // Check for unpinned sites which should be closed

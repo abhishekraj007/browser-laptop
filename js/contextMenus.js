@@ -29,6 +29,7 @@ const locale = require('../js/l10n')
 const {getSetting} = require('./settings')
 const settings = require('./constants/settings')
 const textUtils = require('./lib/text')
+const {getPartitionFromNumber} = require('./state/frameStateUtil')
 const {isIntermediateAboutPage, isUrl, aboutUrls} = require('./lib/appUrlUtil')
 const {getBase64FromImageUrl} = require('./lib/imageUtil')
 const urlParse = require('../app/common/urlParse')
@@ -80,12 +81,12 @@ const getDownloadsBarHeight = () => {
 function tabPageTemplateInit (framePropsList) {
   return [{
     label: locale.translation('unmuteTabs'),
-    click: (item, focusedWindow) => {
+    click: (item) => {
       windowActions.muteAllAudio(framePropsList, false)
     }
   }, {
     label: locale.translation('muteTabs'),
-    click: (item, focusedWindow) => {
+    click: (item) => {
       windowActions.muteAllAudio(framePropsList, true)
     }
   }]
@@ -101,7 +102,7 @@ function urlBarTemplateInit (searchDetail, activeFrame, e) {
     items.push({
       label: locale.translation('pasteAndGo'),
       enabled: hasClipboard,
-      click: (item, focusedWindow) => {
+      click: (item) => {
         windowActions.loadUrl(activeFrame, clipboardText)
       }
     })
@@ -111,7 +112,7 @@ function urlBarTemplateInit (searchDetail, activeFrame, e) {
     items.push({
       label: locale.translation('pasteAndSearch'),
       enabled: hasClipboard,
-      click: (item, focusedWindow) => {
+      click: (item) => {
         windowActions.loadUrl(activeFrame, searchUrl)
       }
     })
@@ -409,7 +410,9 @@ function moreBookmarksTemplateInit (allBookmarkItems, bookmarks, activeFrame) {
   template.push({
     l10nLabelId: 'moreBookmarks',
     click: function () {
-      windowActions.newFrame({ location: 'about:bookmarks' })
+      appActions.tabCreateRequested({
+        url: 'about:bookmarks'
+      })
       windowActions.setContextMenuDetail()
     }
   })
@@ -422,7 +425,7 @@ function usernameTemplateInit (usernames, origin, action) {
     let password = usernames[username]
     template.push({
       label: username,
-      click: (item, focusedWindow) => {
+      click: (item) => {
         windowActions.setActiveFrameShortcut(null, messages.FILL_PASSWORD, {
           username,
           password,
@@ -457,7 +460,7 @@ function autofillTemplateInit (suggestions, frame) {
     } else {
       template.push({
         label: value,
-        click: (item, focusedWindow) => {
+        click: (item) => {
           windowActions.autofillSelectionClicked(frame.get('tabId'), value, frontendId, i)
         }
       })
@@ -473,9 +476,10 @@ function flashTemplateInit (frameProps) {
     template.push({
       label: locale.translation('openFlashPreferences'),
       click: () => {
-        windowActions.newFrame({
-          location: 'about:preferences#security'
-        }, true)
+        appActions.tabCreateRequested({
+          url: 'about:preferences#security',
+          windowId: frameProps.get('windowId')
+        })
       }
     })
   } else {
@@ -499,7 +503,7 @@ function flashTemplateInit (frameProps) {
 
 function tabTemplateInit (frameProps) {
   const frameKey = frameProps.get('key')
-  const template = [CommonMenu.newTabMenuItem(frameProps.get('key'))]
+  const template = [CommonMenu.newTabMenuItem(frameProps.get('tabId'))]
   const location = frameProps.get('location')
   if (location !== 'about:newtab') {
     template.push(
@@ -513,10 +517,8 @@ function tabTemplateInit (frameProps) {
         }
       }, {
         label: locale.translation('clone'),
-        click: (item, focusedWindow) => {
-          if (focusedWindow) {
-            appActions.tabCloned(frameProps.get('tabId'))
-          }
+        click: (item) => {
+          appActions.tabCloned(frameProps.get('tabId'))
         }
       })
   }
@@ -545,7 +547,7 @@ function tabTemplateInit (frameProps) {
   template.push(CommonMenu.separatorMenuItem,
     {
       label: locale.translation('muteOtherTabs'),
-      click: (item, focusedWindow) => {
+      click: (item) => {
         windowActions.muteAllAudioExcept(frameProps)
       }
     })
@@ -751,19 +753,20 @@ function hamburgerTemplateInit (location, e) {
   return menuUtil.sanitizeTemplateItems(template)
 }
 
-const openInNewTabMenuItem = (location, isPrivate, partitionNumber, parentFrameKey) => {
-  let openInForeground = getSetting(settings.SWITCH_TO_NEW_TABS) === true
-  if (Array.isArray(location) && Array.isArray(partitionNumber)) {
+const openInNewTabMenuItem = (url, isPrivate, partitionNumber, openerTabId) => {
+  const active = getSetting(settings.SWITCH_TO_NEW_TABS) === true
+  if (Array.isArray(url) && Array.isArray(partitionNumber)) {
     return {
       label: locale.translation('openInNewTabs'),
       click: () => {
-        for (let i = 0; i < location.length; ++i) {
-          windowActions.newFrame(
-            { location: location[i],
-              isPrivate,
-              partitionNumber: partitionNumber[i],
-              parentFrameKey },
-            openInForeground)
+        for (let i = 0; i < url.length; ++i) {
+          appActions.tabCreateRequested({
+            url: url[i],
+            isPrivate,
+            partitionNumber: partitionNumber[i],
+            openerTabId,
+            active
+          })
         }
       }
     }
@@ -771,7 +774,13 @@ const openInNewTabMenuItem = (location, isPrivate, partitionNumber, parentFrameK
     return {
       label: locale.translation('openInNewTab'),
       click: () => {
-        windowActions.newFrame({ location, isPrivate, partitionNumber, parentFrameKey }, openInForeground)
+        appActions.tabCreateRequested({
+          url,
+          isPrivate,
+          partitionNumber,
+          openerTabId,
+          active
+        })
       }
     }
   }
@@ -786,18 +795,19 @@ const openAllInNewTabsMenuItem = (allSites, folderDetail) => {
   }
 }
 
-const openInNewPrivateTabMenuItem = (location, parentFrameKey) => {
-  let openInForeground = getSetting(settings.SWITCH_TO_NEW_TABS) === true
-  if (Array.isArray(location)) {
+const openInNewPrivateTabMenuItem = (url, openerTabId) => {
+  const active = getSetting(settings.SWITCH_TO_NEW_TABS) === true
+  if (Array.isArray(url)) {
     return {
       label: locale.translation('openInNewPrivateTabs'),
       click: () => {
-        for (let i = 0; i < location.length; ++i) {
-          windowActions.newFrame({
-            location: location[i],
+        for (let i = 0; i < url.length; ++i) {
+          appActions.tabCreateRequested({
+            url: url[i],
             isPrivate: true,
-            parentFrameKey
-          }, openInForeground)
+            openerTabId,
+            active
+          })
         }
       }
     }
@@ -805,11 +815,12 @@ const openInNewPrivateTabMenuItem = (location, parentFrameKey) => {
     return {
       label: locale.translation('openInNewPrivateTab'),
       click: () => {
-        windowActions.newFrame({
-          location,
+        appActions.tabCreateRequested({
+          url,
           isPrivate: true,
-          parentFrameKey
-        }, openInForeground)
+          openerTabId,
+          active
+        })
       }
     }
   }
@@ -824,30 +835,32 @@ const openInNewWindowMenuItem = (location, isPrivate, partitionNumber) => {
   }
 }
 
-const openInNewSessionTabMenuItem = (location, parentFrameKey) => {
-  let openInForeground = getSetting(settings.SWITCH_TO_NEW_TABS) === true
-  if (Array.isArray(location)) {
+const openInNewSessionTabMenuItem = (url, openerTabId) => {
+  const active = getSetting(settings.SWITCH_TO_NEW_TABS) === true
+  if (Array.isArray(url)) {
     return {
       label: locale.translation('openInNewSessionTabs'),
-      click: (item, focusedWindow) => {
-        for (let i = 0; i < location.length; ++i) {
-          windowActions.newFrame({
-            location: location[i],
+      click: (item) => {
+        for (let i = 0; i < url.length; ++i) {
+          appActions.tabCreateRequested({
+            url: url[i],
             isPartitioned: true,
-            parentFrameKey
-          }, openInForeground)
+            openerTabId,
+            active
+          })
         }
       }
     }
   } else {
     return {
       label: locale.translation('openInNewSessionTab'),
-      click: (item, focusedWindow) => {
-        windowActions.newFrame({
-          location,
+      click: (item) => {
+        appActions.tabCreateRequested({
+          url,
           isPartitioned: true,
-          parentFrameKey
-        }, openInForeground)
+          openerTabId,
+          active
+        })
       }
     }
   }
@@ -867,8 +880,8 @@ const saveAsMenuItem = (label, location) => {
 const copyAddressMenuItem = (label, location) => {
   return {
     label: locale.translation(label),
-    click: (item, focusedWindow) => {
-      if (focusedWindow && location) {
+    click: (item) => {
+      if (location) {
         appActions.clipboardTextCopied(location)
       }
     }
@@ -888,14 +901,17 @@ const searchSelectionMenuItem = (location) => {
   var searchText = textUtils.ellipse(location)
   return {
     label: locale.translation('openSearch').replace(/{{\s*selectedVariable\s*}}/, searchText),
-    click: (item, focusedWindow) => {
-      if (focusedWindow && location) {
+    click: (item) => {
+      if (location) {
         let activeFrame = windowStore.getState().get('activeFrameKey')
         let frame = windowStore.getFrame(activeFrame)
         let searchUrl = windowStore.getState().getIn(['searchDetail', 'searchURL']).replace('{searchTerms}', encodeURIComponent(location))
-        windowActions.newFrame({ location: searchUrl,
+        appActions.tabCreateRequested({
+          url: searchUrl,
           isPrivate: frame.get('isPrivate'),
-          partitionNumber: frame.get('partitionNumber') }, true)
+          partitionNumber: frame.get('partitionNumber'),
+          windowId: frame.get('windowId')
+        })
       }
     }
   }
@@ -905,7 +921,7 @@ const showDefinitionMenuItem = (selectionText) => {
   let lookupText = textUtils.ellipse(selectionText, 3)
   return {
     label: locale.translation('lookupSelection').replace(/{{\s*selectedVariable\s*}}/, lookupText),
-    click: (item, focusedWindow) => {
+    click: (item) => {
       webviewActions.showDefinitionForSelection()
     }
   }
@@ -914,13 +930,13 @@ const showDefinitionMenuItem = (selectionText) => {
 function addLinkMenu (link, frame) {
   const template = []
   if (!frame.get('isPrivate')) {
-    template.push(openInNewTabMenuItem(link, frame.get('isPrivate'), frame.get('partitionNumber'), frame.get('key')))
+    template.push(openInNewTabMenuItem(link, frame.get('isPrivate'), frame.get('partitionNumber'), frame.get('tabId')))
   }
   template.push(
-    openInNewPrivateTabMenuItem(link, frame.get('key')),
+    openInNewPrivateTabMenuItem(link, frame.get('tabId')),
     openInNewWindowMenuItem(link, frame.get('isPrivate'), frame.get('partitionNumber')),
     CommonMenu.separatorMenuItem,
-    openInNewSessionTabMenuItem(link, frame.get('key')),
+    openInNewSessionTabMenuItem(link, frame.get('tabId')),
     CommonMenu.separatorMenuItem)
 
   if (link.toLowerCase().startsWith('mailto:')) {
@@ -956,10 +972,13 @@ function mainTemplateInit (nodeProps, frame, tab) {
     template.push(
       {
         label: locale.translation('openImageInNewTab'),
-        click: (item, focusedWindow) => {
-          if (focusedWindow && nodeProps.srcURL) {
-            // TODO: open this in the next tab instead of last tab
-            focusedWindow.webContents.send(messages.SHORTCUT_NEW_FRAME, nodeProps.srcURL, { isPrivate: frame.get('isPrivate'), partitionNumber: frame.get('partitionNumber') })
+        click: (item) => {
+          if (nodeProps.srcURL) {
+            appActions.tabCreateRequested({
+              url: nodeProps.srcURL,
+              openerTabId: frame.get('tabId'),
+              partition: getPartitionFromNumber(frame.get('partitionNumber'), frame.get('isPrivate'))
+            })
           }
         }
       },
@@ -984,15 +1003,18 @@ function mainTemplateInit (nodeProps, frame, tab) {
       template.push(
         {
           label: locale.translation('searchImage'),
-          click: (item) => {
+          click: () => {
+            console.log(arguments)
             let activeFrame = windowStore.getState().get('activeFrameKey')
             let frame = windowStore.getFrame(activeFrame)
             let searchUrl = windowStore.getState().getIn(['searchDetail', 'searchURL'])
               .replace('{searchTerms}', encodeURIComponent(nodeProps.srcURL))
               .replace('?q', 'byimage?image_url')
-            windowActions.newFrame({ location: searchUrl,
+            appActions.tabCreateRequested({
+              url: searchUrl,
               isPrivate: frame.get('isPrivate'),
-              partitionNumber: frame.get('partitionNumber')}, true)
+              partitionNumber: frame.get('partitionNumber')
+            })
           }
         }
       )
@@ -1136,7 +1158,7 @@ function mainTemplateInit (nodeProps, frame, tab) {
   if (!isAboutPage) {
     template.push({
       label: locale.translation('inspectElement'),
-      click: (item, focusedWindow) => {
+      click: (item) => {
         webviewActions.inspectElement(nodeProps.x, nodeProps.y)
       }
     })
@@ -1442,12 +1464,13 @@ function onBackButtonHistoryMenu (activeFrame, history, target) {
       menuTemplate.push({
         label: history.entries[index].display,
         icon: history.entries[index].icon,
-        click: (e, focusedWindow) => {
+        click: (e) => {
           if (eventUtil.isForSecondaryAction(e)) {
-            windowActions.newFrame({
-              location: url,
-              partitionNumber: activeFrame.props.frame.get('partitionNumber')
-            }, !!e.shiftKey)
+            appActions.tabCreateRequested({
+              url,
+              partitionNumber: activeFrame.props.frame.get('partitionNumber'),
+              active: !!e.shiftKey
+            })
           } else {
             activeFrame.goToIndex(index)
           }
@@ -1460,8 +1483,10 @@ function onBackButtonHistoryMenu (activeFrame, history, target) {
       CommonMenu.separatorMenuItem,
       {
         label: locale.translation('showAllHistory'),
-        click: (e, focusedWindow) => {
-          windowActions.newFrame({ location: 'about:history' })
+        click: (e) => {
+          appActions.tabCreateRequested({
+            url: 'about:history'
+          })
           windowActions.setContextMenuDetail()
         }
       })
@@ -1486,12 +1511,13 @@ function onForwardButtonHistoryMenu (activeFrame, history, target) {
       menuTemplate.push({
         label: history.entries[index].display,
         icon: history.entries[index].icon,
-        click: (e, focusedWindow) => {
+        click: (e) => {
           if (eventUtil.isForSecondaryAction(e)) {
-            windowActions.newFrame({
-              location: url,
-              partitionNumber: activeFrame.props.frame.get('partitionNumber')
-            }, !!e.shiftKey)
+            appActions.tabCreateRequested({
+              url,
+              partitionNumber: activeFrame.props.frame.get('partitionNumber'),
+              active: !!e.shiftKey
+            })
           } else {
             activeFrame.goToIndex(index)
           }
@@ -1504,8 +1530,10 @@ function onForwardButtonHistoryMenu (activeFrame, history, target) {
       CommonMenu.separatorMenuItem,
       {
         label: locale.translation('showAllHistory'),
-        click: (e, focusedWindow) => {
-          windowActions.newFrame({ location: 'about:history' })
+        click: (e) => {
+          appActions.tabCreateRequested({
+            url: 'about:history'
+          })
           windowActions.setContextMenuDetail()
         }
       })

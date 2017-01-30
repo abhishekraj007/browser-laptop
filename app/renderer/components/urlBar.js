@@ -200,9 +200,14 @@ class UrlBar extends ImmutableComponent {
               : this.buildSearchUrl(location)
             // do search.
             if (e.altKey) {
-              windowActions.newFrame({ location }, true)
+              appActions.tabCreateRequested({
+                url: location
+              })
             } else if (e.metaKey) {
-              windowActions.newFrame({ location }, !!e.shiftKey)
+              appActions.tabCreateRequested({
+                url: location,
+                active: !!e.shiftKey
+              })
             } else {
               windowActions.loadUrl(this.activeFrame, location)
             }

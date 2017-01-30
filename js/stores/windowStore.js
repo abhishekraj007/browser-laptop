@@ -69,9 +69,7 @@ const focusWebview = (framePath) => {
 }
 
 let currentKey = 0
-let currentPartitionNumber = 0
 const incrementNextKey = () => ++currentKey
-const incrementPartitionNumber = () => ++currentPartitionNumber
 
 class WindowStore extends EventEmitter {
   getState () {
@@ -135,6 +133,7 @@ const newFrame = (frameOpts, openInForeground, insertionIndex, nextKey) => {
       frameOpts.partitionNumber = frameStateUtil.getPartitionNumber(frameOpts.partition)
     }
   }
+  frameOpts.partitionNumber = frameOpts.partitionNumber || 0
 
   if (frameOpts.disposition) {
     openInForeground = frameOpts.disposition !== 'background-tab'
@@ -158,17 +157,6 @@ const newFrame = (frameOpts, openInForeground, insertionIndex, nextKey) => {
       // Bad URLs passed here can actually crash the browser
       frameOpts.location = ''
     }
-  }
-
-  let partitionNumber = frameOpts.partitionNumber
-  let nextPartitionNumber = 0
-  if (partitionNumber) {
-    nextPartitionNumber = partitionNumber
-    if (currentPartitionNumber < nextPartitionNumber) {
-      currentPartitionNumber = nextPartitionNumber
-    }
-  } else if (frameOpts.isPartitioned) {
-    nextPartitionNumber = incrementPartitionNumber()
   }
 
   // TODO: longer term get rid of parentFrameKey completely instead of
@@ -205,7 +193,7 @@ const newFrame = (frameOpts, openInForeground, insertionIndex, nextKey) => {
   windowState = windowState.merge(
     frameStateUtil.addFrame(
       windowState, windowState.get('tabs'), frameOpts,
-      nextKey, nextPartitionNumber, openInForeground ? nextKey : windowState.get('activeFrameKey'), insertionIndex))
+      nextKey, frameOpts.partitionNumber, openInForeground ? nextKey : windowState.get('activeFrameKey'), insertionIndex))
 
   if (openInForeground) {
     const activeFrame = frameStateUtil.getActiveFrame(windowState)
@@ -253,7 +241,6 @@ const doAction = (action) => {
     case windowConstants.WINDOW_SET_STATE:
       windowState = action.windowState
       currentKey = windowState.get('frames').reduce((previousVal, frame) => Math.max(previousVal, frame.get('key')), 0)
-      currentPartitionNumber = windowState.get('frames').reduce((previousVal, frame) => Math.max(previousVal, frame.get('partitionNumber')), 0)
       const activeFrame = frameStateUtil.getActiveFrame(windowState)
       if (activeFrame && activeFrame.get('location') !== 'about:newtab') {
         focusWebview(activeFrameStatePath(windowState))
@@ -327,9 +314,6 @@ const doAction = (action) => {
         isFullScreen: action.isFullScreen !== undefined ? action.isFullScreen : windowState.getIn(['frames', frameStateUtil.getFramePropsIndex(windowState.get('frames'), action.frameProps)].concat('isFullScreen')),
         showFullScreenWarning: action.showFullScreenWarning
       })
-      break
-    case windowConstants.WINDOW_NEW_FRAME:
-      newFrame(action.frameOpts, action.openInForeground)
       break
     case windowConstants.WINDOW_VIEW_KEY:
       newFrame(action.frameOpts, action.openInForeground)
@@ -766,9 +750,6 @@ const doAction = (action) => {
         windowState = windowState.setIn(['modalDialogDetail', action.className], Immutable.fromJS(action.props))
       }
       break
-    case appConstants.APP_NEW_TAB:
-      newFrame(action.frameProps, action.frameProps.get('disposition') === 'foreground-tab')
-      break
     case windowConstants.WINDOW_TAB_CLOSED_WITH_MOUSE:
       if (frameStateUtil.getNonPinnedFrameCount(windowState) % getSetting(settings.TABS_PER_PAGE) === 0) {
         windowState = windowState.deleteIn(['ui', 'tabs', 'fixTabWidth'])
@@ -778,6 +759,9 @@ const doAction = (action) => {
       break
     case windowConstants.WINDOW_TAB_MOUSE_LEAVE:
       windowState = windowState.deleteIn(['ui', 'tabs', 'fixTabWidth'])
+      break
+    case appConstants.APP_NEW_WEB_CONTENTS_ADDED:
+      newFrame(action.frameOpts, action.frameOpts.openInForeground)
       break
     default:
       break

@@ -134,10 +134,14 @@ class BraveryPanel extends ImmutableComponent {
     ipc.emit(messages.SHORTCUT_ACTIVE_FRAME_LOAD_URL, {}, this.props.activeRequestedLocation)
   }
   onEditGlobal () {
-    ipc.emit(messages.SHORTCUT_NEW_FRAME, {}, 'about:preferences#shields')
+    appActions.tabCreateRequested({
+      url: 'about:preferences#shields'
+    })
   }
   onInfoClick () {
-    ipc.emit(messages.SHORTCUT_NEW_FRAME, {}, config.fingerprintingInfoUrl)
+    appActions.tabCreateRequested({
+      url: config.fingerprintingInfoUrl
+    })
   }
   onToggleSiteSetting (setting, e) {
     if (setting !== 'shieldsUp' && !this.props.braverySettings.shieldsUp) {

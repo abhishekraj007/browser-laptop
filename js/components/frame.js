@@ -318,9 +318,8 @@ class Frame extends ImmutableComponent {
           guestInstanceId = null
         }
       } else {
-        let partition = FrameStateUtil.getPartition(this.frame)
-        ipc.sendSync(messages.INITIALIZE_PARTITION, partition)
-        this.webview.setAttribute('partition', partition)
+        // The partition is guaranteed to be initialized by now by the browser process
+        this.webview.setAttribute('partition', FrameStateUtil.getPartition(this.frame))
       }
 
       this.addEventListeners()
@@ -508,12 +507,13 @@ class Frame extends ImmutableComponent {
       case 'view-source':
         const sourceLocation = UrlUtil.getViewSourceUrlFromUrl(this.tab.get('url'))
         if (sourceLocation !== null) {
-          windowActions.newFrame({
-            location: sourceLocation,
+          appActions.tabCreateRequested({
+            url: sourceLocation,
             isPrivate: this.frame.get('isPrivate'),
             partitionNumber: this.frame.get('partitionNumber'),
-            parentFrameKey: this.frame.get('key')
-          }, true)
+            openerTabId: this.frame.get('tabId'),
+            active: true
+          })
         }
         // TODO: Make the URL bar show the view-source: prefix
         break
@@ -718,7 +718,10 @@ class Frame extends ImmutableComponent {
       }
     })
     this.webview.addEventListener('show-autofill-settings', (e) => {
-      windowActions.newFrame({ location: 'about:autofill' }, true)
+      appActions.tabCreateRequested({
+        url: 'about:autofill',
+        active: true
+      })
     })
     this.webview.addEventListener('show-autofill-popup', (e) => {
       if (this.frame.isEmpty()) {
@@ -863,7 +866,10 @@ class Frame extends ImmutableComponent {
           // open a new tab for other about urls
           // and send this tab back to wherever it came from
           this.goBack()
-          windowActions.newFrame({location: e.validatedURL}, true)
+          appActions.tabCreateRequested({
+            url: e.validatedURL,
+            active: true
+          })
           return
         }
 
@@ -1145,6 +1151,7 @@ class Frame extends ImmutableComponent {
 
   render () {
     return <div
+      data-partition={FrameStateUtil.getPartition(this.frame)}
       className={cx({
         frameWrapper: true,
         isPreview: this.props.isPreview,

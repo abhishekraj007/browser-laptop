@@ -606,9 +606,9 @@ class GeneralTab extends ImmutableComponent {
         </SettingItem>
         <div className='iconTitle'>
           <span data-l10n-id='myHomepage' />
-          <span className='fa fa-info-circle iconLink' onClick={aboutActions.newFrame.bind(null, {
-            location: 'https://github.com/brave/browser-laptop/wiki/End-User-FAQ#how-to-set-up-multiple-home-pages'
-          }, true)}
+          <span className='fa fa-info-circle iconLink' onClick={aboutActions.tabCreateRequested.bind(null, {
+            url: 'https://github.com/brave/browser-laptop/wiki/End-User-FAQ#how-to-set-up-multiple-home-pages'
+          })}
             data-l10n-id='multipleHomePages' />
         </div>
         <SettingItem>
@@ -973,9 +973,9 @@ class ShieldsTab extends ImmutableComponent {
         <SettingCheckbox checked={this.props.braveryDefaults.get('noScript')} dataL10nId='noScriptPref' onChange={this.onToggleNoScript} />
         <SettingCheckbox dataL10nId='blockCanvasFingerprinting' prefKey={settings.BLOCK_CANVAS_FINGERPRINTING} settings={this.props.settings} onChangeSetting={this.props.onChangeSetting} />
         <Button l10nId='manageAdblockSettings' className='primaryButton manageAdblockSettings'
-          onClick={aboutActions.newFrame.bind(null, {
-            location: 'about:adblock'
-          }, true)} />
+          onClick={aboutActions.tabCreateRequested.bind(null, {
+            url: 'about:adblock'
+          })} />
       </SettingsList>
       <SitePermissionsPage siteSettings={this.props.siteSettings}
         names={braveryPermissionNames}
@@ -1043,17 +1043,17 @@ class SecurityTab extends ImmutableComponent {
         {
           getSetting(settings.ACTIVE_PASSWORD_MANAGER, this.props.settings) === passwordManagers.BUILT_IN
           ? <label className='linkTextSmall' data-l10n-id='managePasswords'
-            onClick={aboutActions.newFrame.bind(null, {
-              location: 'about:passwords'
-            }, true)} />
+            onClick={aboutActions.tabCreateRequested.bind(null, {
+              url: 'about:passwords'
+            })} />
           : null
         }
         {
           getSetting(settings.ACTIVE_PASSWORD_MANAGER, this.props.settings) === passwordManagers.LAST_PASS
           ? <label className='linkTextSmall' data-l10n-id='preferences'
-            onClick={aboutActions.newFrame.bind(null, {
-              location: lastPassPreferencesUrl
-            }, true)} />
+            onClick={aboutActions.tabCreateRequested.bind(null, {
+              url: lastPassPreferencesUrl
+            })} />
           : null
         }
       </SettingsList>
@@ -1061,9 +1061,9 @@ class SecurityTab extends ImmutableComponent {
       <SettingsList>
         <SettingCheckbox dataL10nId='enableAutofill' prefKey={settings.AUTOFILL_ENABLED} settings={this.props.settings} onChangeSetting={this.props.onChangeSetting} />
         <Button l10nId='manageAutofillData' className='primaryButton manageAutofillDataButton'
-          onClick={aboutActions.newFrame.bind(null, {
-            location: 'about:autofill'
-          }, true)} disabled={!getSetting(settings.AUTOFILL_ENABLED, this.props.settings)} />
+          onClick={aboutActions.tabCreateRequested.bind(null, {
+            url: 'about:autofill'
+          })} disabled={!getSetting(settings.AUTOFILL_ENABLED, this.props.settings)} />
       </SettingsList>
       <div className='sectionTitle' data-l10n-id='fullscreenContent' />
       <SettingsList>
@@ -1089,9 +1089,9 @@ class SecurityTab extends ImmutableComponent {
               ? <div>
                 <span className='fa fa-info-circle flashInfoIcon' />
                 <span data-l10n-id='enableFlashSubtext' />&nbsp;
-                <span className='linkText' onClick={aboutActions.newFrame.bind(null, {
-                  location: appConfig.flash.installUrl
-                }, true)} title={appConfig.flash.installUrl}>{'Adobe'}</span>.
+                <span className='linkText' onClick={aboutActions.tabCreateRequested.bind(null, {
+                  url: appConfig.flash.installUrl
+                })} title={appConfig.flash.installUrl}>{'Adobe'}</span>.
               </div>
               : <div>
                 <span className='fa fa-info-circle flashInfoIcon' />
@@ -1101,9 +1101,9 @@ class SecurityTab extends ImmutableComponent {
           <div>
             <span className='fa fa-info-circle flashInfoIcon' />
             <span data-l10n-id='flashTroubleshooting' />&nbsp;
-            <span className='linkText' onClick={aboutActions.newFrame.bind(null, {
-              location: 'https://github.com/brave/browser-laptop/wiki/Flash-Support-Deprecation-Proposal#troubleshooting-flash-issues'
-            }, true)} title='https://github.com/brave/browser-laptop/wiki/Flash-Support-Deprecation-Proposal#troubleshooting-flash-issues'>{'wiki'}</span>.
+            <span className='linkText' onClick={aboutActions.tabCreateRequested.bind(null, {
+              url: 'https://github.com/brave/browser-laptop/wiki/Flash-Support-Deprecation-Proposal#troubleshooting-flash-issues'
+            })} title='https://github.com/brave/browser-laptop/wiki/Flash-Support-Deprecation-Proposal#troubleshooting-flash-issues'>{'wiki'}</span>.
           </div>
         </div>
       </SettingsList>
@@ -1111,7 +1111,7 @@ class SecurityTab extends ImmutableComponent {
       ? <div>
         <div className='sectionTitle' data-l10n-id='widevineSection' />
         <SettingsList>
-          <WidevineInfo newFrameAction={aboutActions.newFrame} />
+          <WidevineInfo tabCreateRequestedAction={aboutActions.tabCreateRequested} />
           <SettingCheckbox checked={this.props.braveryDefaults.get('widevine')} dataL10nId='enableWidevine' onChange={this.onToggleWidevine} />
         </SettingsList>
       </div>
@@ -1138,9 +1138,9 @@ class AdvancedTab extends ImmutableComponent {
         <SettingCheckbox dataL10nId='useTorrentViewer' prefKey={settings.TORRENT_VIEWER_ENABLED} settings={this.props.settings} onChangeSetting={this.props.onChangeSetting} />
         <SettingCheckbox dataL10nId='enablePocket' prefKey={settings.POCKET_ENABLED} settings={this.props.settings} onChangeSetting={this.props.onChangeSetting} />
         <Button l10nId='viewInstalledExtensions' className='primaryButton viewExtensionsInfo'
-          onClick={aboutActions.newFrame.bind(null, {
-            location: 'about:extensions'
-          }, true)} />
+          onClick={aboutActions.tabCreateRequested.bind(null, {
+            url: 'about:extensions'
+          })} />
         <div data-l10n-id='moreExtensionsComingSoon' className='moreExtensionsComingSoon' />
       </SettingsList>
     </div>

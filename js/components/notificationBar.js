@@ -7,6 +7,7 @@ const ImmutableComponent = require('./immutableComponent')
 
 const ipc = require('electron').ipcRenderer
 const messages = require('../constants/messages')
+const appActions = require('../actions/appActions')
 const getOrigin = require('../state/siteUtil').getOrigin
 
 class NotificationItem extends ImmutableComponent {
@@ -23,7 +24,9 @@ class NotificationItem extends ImmutableComponent {
   }
 
   openAdvanced () {
-    ipc.emit(messages.SHORTCUT_NEW_FRAME, {}, this.props.detail.get('options').get('advancedLink'))
+    appActions.tabCreateRequested({
+      url: this.props.detail.get('options').get('advancedLink')
+    })
   }
 
   toggleCheckbox () {

@@ -75,15 +75,12 @@ const aboutActions = {
   },
 
   /**
-   * Loads a URL in a new frame in a safe way.
-   * It is important that it is not a simple anchor because it should not
-   * preserve the about preload script. See #672
+   * Opens a new tab and loads the specified URL.
    */
-  newFrame: function (frameOpts, openInForeground = true) {
+  tabCreateRequested: function (createProperties) {
     aboutActions.dispatchAction({
-      actionType: windowConstants.WINDOW_NEW_FRAME,
-      frameOpts,
-      openInForeground
+      actionType: appConstants.APP_CREATE_TAB_REQUESTED,
+      createProperties
     })
   },
 

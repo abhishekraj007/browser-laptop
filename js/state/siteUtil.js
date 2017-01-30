@@ -462,13 +462,13 @@ function normURL (url) {
 }
 
 /**
- * Converts a siteDetail to frameOpts format
+ * Converts a siteDetail to createProperties format
  * @param {Object} siteDetail - A site detail as per app state
- * @return {Object} A frameOpts plain JS object, not ImmutableJS
+ * @return {Object} A createProperties plain JS object, not ImmutableJS
  */
-module.exports.toFrameOpts = function (siteDetail) {
+module.exports.toCreateProperties = function (siteDetail) {
   return {
-    location: siteDetail.get('location'),
+    url: siteDetail.get('location'),
     partitionNumber: siteDetail.get('partitionNumber')
   }
 }

@@ -240,10 +240,9 @@ class Main extends ImmutableComponent {
       if (!this.braveShieldsDisabled) {
         this.onBraveMenu()
       } else {
-        windowActions.newFrame({
-          location: 'about:preferences#shields',
-          singleFrame: true
-        }, true)
+        appActions.maybeCreateTabRequested({
+          url: 'about:preferences#shields'
+        })
       }
     })
     ipc.on(messages.ENABLE_SWIPE_GESTURE, (e) => {
@@ -334,27 +333,6 @@ class Main extends ImmutableComponent {
     this.registerSwipeListener()
     this.registerWindowLevelShortcuts()
     this.registerCustomTitlebarHandlers()
-
-    ipc.on(messages.SHORTCUT_NEW_FRAME, (event, url, options = {}) => {
-      if (options.singleFrame) {
-        const frameProps = self.props.windowState.get('frames').find((frame) => frame.get('location') === url)
-        if (frameProps) {
-          windowActions.setActiveFrame(frameProps)
-          return
-        }
-      }
-      let openInForeground = getSetting(settings.SWITCH_TO_NEW_TABS) === true || options.openInForeground
-      const frameOpts = options.frameOpts || {
-        location: url,
-        isPrivate: !!options.isPrivate,
-        isPartitioned: !!options.isPartitioned,
-        parentFrameKey: options.parentFrameKey
-      }
-      if (options.partitionNumber !== undefined) {
-        frameOpts.partitionNumber = options.partitionNumber
-      }
-      windowActions.newFrame(frameOpts, openInForeground)
-    })
 
     ipc.on(messages.NEW_POPUP_WINDOW, function (evt, extensionId, src, props) {
       windowActions.setPopupWindowDetail(Immutable.fromJS({
@@ -684,8 +662,9 @@ class Main extends ImmutableComponent {
   onDrop (e) {
     if (e.dataTransfer.files.length > 0) {
       Array.from(e.dataTransfer.files).forEach((file) => {
-        const path = encodeURI(file.path)
-        return windowActions.newFrame({location: path, title: file.name})
+        const url = encodeURI(file.path)
+        appActions.tabCreateRequested({ url })
+        return
       })
     } else if (e.dataTransfer.getData('text/plain')) {
       let activeFrame = frameStateUtil.getActiveFrame(this.props.windowState)

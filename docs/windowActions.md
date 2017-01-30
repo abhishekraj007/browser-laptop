@@ -198,19 +198,6 @@ Dispatches a message to the store to indicate that the webview entered full scre
 
 
 
-### newFrame(frameOpts, openInForeground) 
-
-Dispatches a message to the store to create a new frame
-
-**Parameters**
-
-**frameOpts**: `Object`, An object of frame options such as isPrivate, element, and tab features.
-                 These may not all be hooked up in Electron yet.
-
-**openInForeground**: `boolean`, true if the new frame should become the new active frame
-
-
-
 ### closeFrame(frames, frameProps) 
 
 Dispatches a message to close a frame
