@@ -76,7 +76,7 @@ class Tabs extends ImmutableComponent {
           const droppedOnFrameProps = windowStore.getFrame(droppedOnTab.props.tab.get('frameKey'))
           windowActions.moveTab(sourceDragData, droppedOnFrameProps, isLeftSide)
           if (sourceDragData.get('pinnedLocation')) {
-            windowActions.setPinned(sourceDragData, false)
+            appActions.tabPinned(sourceDragData.get('tabId'), false)
           }
         }
       }, 0)

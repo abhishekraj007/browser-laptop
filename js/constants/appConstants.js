@@ -86,7 +86,8 @@ const appConstants = {
   APP_SHUTTING_DOWN: _,
   APP_CLIPBOARD_TEXT_UPDATED: _,
   APP_TAB_TOGGLE_DEV_TOOLS: _,
-  APP_TAB_CLONED: _
+  APP_TAB_CLONED: _,
+  APP_TAB_PINNED: _
 }
 
 module.exports = mapValuesByKeys(appConstants)

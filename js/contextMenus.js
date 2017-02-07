@@ -530,7 +530,7 @@ function tabTemplateInit (frameProps) {
         label: locale.translation(isPinned ? 'unpinTab' : 'pinTab'),
         click: (item) => {
           // Handle converting the current tab window into a pinned site
-          windowActions.setPinned(frameProps, !isPinned)
+          appActions.tabPinned(frameProps.get('tabId'), !isPinned)
         }
       })
     }

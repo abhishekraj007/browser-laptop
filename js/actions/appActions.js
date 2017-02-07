@@ -822,6 +822,18 @@ const appActions = {
   },
 
   /**
+   * Dispatches a message when a tab is being pinned
+   * @param {number} tabId - The tabId of the tab to pin
+   */
+  tabPinned: function (tabId, pinned) {
+    AppDispatcher.dispatch({
+      actionType: appConstants.APP_TAB_PINNED,
+      tabId,
+      pinned
+    })
+  },
+
+  /**
    * Dispatches a message when a web contents is added
    * @param {number} windowId - The windowId of the host window
    * @param {object} frameOpts - frame options for the added web contents

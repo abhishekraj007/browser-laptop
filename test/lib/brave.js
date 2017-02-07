@@ -468,12 +468,13 @@ var exports = {
         .waitForVisible(braveryPanel)
     })
 
-    this.app.client.addCommand('setPinned', function (location, isPinned, options = {}) {
-      return this.execute(function (location, isPinned, options) {
-        devTools('electron').testData.windowActions.setPinned(devTools('immutable').fromJS(Object.assign({
-          location
-        }, options)), isPinned)
-      }, location, isPinned, options)
+    this.app.client.addCommand('pinTabByIndex', function (index, isPinned) {
+      return this.getWindowState().then((val) => {
+        const tabId = val.value.frames[index].tabId
+        return this.execute(function (tabId, isPinned) {
+          devTools('appActions').tabPinned(tabId, isPinned)
+        }, tabId, isPinned)
+      })
     })
 
     this.app.client.addCommand('ipcOn', function (message, fn) {

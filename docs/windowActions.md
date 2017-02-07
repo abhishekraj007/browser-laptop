@@ -150,18 +150,6 @@ Highlight text in the findbar
 
 
 
-### setPinned(frameProps, isPinned) 
-
-Sets a frame as pinned
-
-**Parameters**
-
-**frameProps**: `Object`, The frame properties to modify
-
-**isPinned**: `boolean`, Whether to pin or not
-
-
-
 ### onWebviewLoadStart(frameProps, location) 
 
 Dispatches a message to the store to indicate that the webview is loading.

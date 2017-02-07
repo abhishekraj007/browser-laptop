@@ -8,7 +8,6 @@ const AppDispatcher = require('../dispatcher/appDispatcher')
 const windowConstants = require('../constants/windowConstants')
 const appActions = require('../actions/appActions')
 const messages = require('../constants/messages')
-const siteTags = require('../constants/siteTags')
 const siteUtil = require('../state/siteUtil')
 const UrlUtil = require('../lib/urlutil')
 const {currentWindow} = require('../../app/renderer/currentWindow')
@@ -201,25 +200,6 @@ const windowActions = {
       frameProps,
       selected
     })
-  },
-
-  /**
-   * Sets a frame as pinned
-   * @param {Object} frameProps - The frame properties to modify
-   * @param {boolean} isPinned - Whether to pin or not
-   */
-  setPinned: function (frameProps, isPinned) {
-    dispatch({
-      actionType: windowConstants.WINDOW_SET_PINNED,
-      frameProps,
-      isPinned
-    })
-    const siteDetail = siteUtil.getDetailFromFrame(frameProps, siteTags.PINNED)
-    if (isPinned) {
-      appActions.addSite(siteDetail, siteTags.PINNED)
-    } else {
-      appActions.removeSite(siteDetail, siteTags.PINNED)
-    }
   },
 
   /**

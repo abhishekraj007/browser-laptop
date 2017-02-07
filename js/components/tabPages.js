@@ -5,6 +5,7 @@
 const React = require('react')
 const ImmutableComponent = require('./immutableComponent')
 const cx = require('../lib/classSet')
+const appActions = require('../actions/appActions')
 const windowActions = require('../actions/windowActions')
 const dragTypes = require('../constants/dragTypes')
 const {onTabPageContextMenu} = require('../contextMenus')
@@ -51,7 +52,7 @@ class TabPage extends ImmutableComponent {
         sourceDragFromPageIndex === -1 ||
         sourceDragFromPageIndex >= this.props.index)
       if (sourceDragData.get('pinnedLocation')) {
-        windowActions.setPinned(sourceDragData, false)
+        appActions.tabPinned(sourceDragData.get('tabId'), false)
       }
       windowActions.setIsBeingDraggedOverDetail()
     }, 0)

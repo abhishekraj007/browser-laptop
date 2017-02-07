@@ -84,12 +84,12 @@ method in at [brave.js](https://github.com/brave/browser-laptop/blob/master/test
 - getTabCount
 - tabByUrl
 - waitForTabCount
+- pinTabByIndex
 
 ### Window management
 - waitForBrowserWindow
 - setContextMenuDetail: hides any context menus which are actively showing
 - showFindbar
-- setPinned
 - getDefaultWindowHeight
 - getDefaultWindowWidth
 - resizeWindow

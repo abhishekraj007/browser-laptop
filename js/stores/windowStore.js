@@ -227,7 +227,6 @@ const immediatelyEmittedActions = [
   windowConstants.WINDOW_AUTOFILL_POPUP_HIDDEN,
   windowConstants.WINDOW_SET_CONTEXT_MENU_DETAIL,
   windowConstants.WINDOW_SET_POPUP_WINDOW_DETAIL,
-  windowConstants.WINDOW_SET_PINNED,
   windowConstants.WINDOW_SET_AUTOFILL_ADDRESS_DETAIL,
   windowConstants.WINDOW_SET_AUTOFILL_CREDIT_CARD_DETAIL,
   windowConstants.WINDOW_SET_MODAL_DIALOG_DETAIL
@@ -514,32 +513,6 @@ const doAction = (action) => {
       } else {
         windowState = windowState.set('popupWindowDetail', action.detail)
       }
-      break
-    case windowConstants.WINDOW_SET_PINNED:
-      // Check if there's already a frame which is pinned.
-      // If so we just want to set it as active.
-      const location = action.frameProps.get('location')
-      const alreadyPinnedFrameProps = windowState.get('frames').find(
-        (frame) => frame.get('pinnedLocation') && frame.get('pinnedLocation') === location &&
-          (action.frameProps.get('partitionNumber') || 0) === (frame.get('partitionNumber') || 0))
-      if (alreadyPinnedFrameProps && action.isPinned) {
-        action.actionType = windowConstants.WINDOW_CLOSE_FRAME
-        doAction(action)
-        action.actionType = windowConstants.WINDOW_SET_ACTIVE_FRAME
-        action.frameProps = alreadyPinnedFrameProps
-        doAction(action)
-      } else {
-        windowState = windowState.setIn(['frames', frameStateUtil.getFramePropsIndex(windowState.get('frames'), action.frameProps), 'pinnedLocation'],
-          action.isPinned ? location : undefined)
-        windowState = windowState.setIn(['tabs', frameStateUtil.getFramePropsIndex(windowState.get('frames'), action.frameProps), 'pinnedLocation'],
-          action.isPinned ? location : undefined)
-      }
-      // Remove preview frame key when unpinning / pinning
-      // becuase it can get messed up.
-      windowState = windowState.merge({
-        previewFrameKey: null
-      })
-      windowState = windowState.deleteIn(['ui', 'tabs', 'previewTabPageIndex'])
       break
     case windowConstants.WINDOW_SET_AUDIO_MUTED:
       windowState = windowState.setIn(['frames', frameStateUtil.getFramePropsIndex(windowState.get('frames'), action.frameProps), 'audioMuted'], action.muted)

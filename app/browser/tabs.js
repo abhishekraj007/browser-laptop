@@ -272,6 +272,18 @@ const api = {
     return state
   },
 
+  pin: (state, action) => {
+    action = makeImmutable(action)
+    const tabId = action.get('tabId')
+    // const pinned = action.get('pinned')
+    const tab = api.getWebContents(tabId)
+    if (tab && !tab.isDestroyed()) {
+      // TODO: Pin it!
+      console.log('todo')
+    }
+    return state
+  },
+
   closeTab: (state, action) => {
     action = makeImmutable(action)
     let tabId = action.get('tabId')
