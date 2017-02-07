@@ -269,7 +269,8 @@ AppStore
     canGoBack: boolean, // the tab can be navigated back
     canGoForward: boolean. // the tab can be navigated forward
     muted: boolean,  // is the tab muted
-    windowId: number  // the windowId that contains the tab
+    windowId: number,  // the windowId that contains the tab
+    tabId: number
   }],
   temporarySiteSettings: {
     // Same as siteSettings but never gets written to disk

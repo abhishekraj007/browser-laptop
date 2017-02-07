@@ -663,6 +663,16 @@ Dispatches a message when a tab is being cloned
 
 
 
+### tabPinned(tabId) 
+
+Dispatches a message when a tab is being pinned
+
+**Parameters**
+
+**tabId**: `number`, The tabId of the tab to pin
+
+
+
 ### newWebContentsAdded(windowId, frameOpts) 
 
 Dispatches a message when a web contents is added

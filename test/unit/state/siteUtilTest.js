@@ -931,6 +931,23 @@ describe('siteUtil', function () {
     })
   })
 
+  describe('getDetailFromTab', function () {
+    it('returns a properly formed siteDetail', function () {
+      const tab = Immutable.fromJS({
+        url: 'https://brave.com/2',
+        title: '3'
+      })
+      assert.deepEqual(
+        siteUtil.getDetailFromTab(tab, siteTags.BOOKMARK).toJS(),
+        {
+          location: tab.get('url'),
+          title: tab.get('title'),
+          tags: [siteTags.BOOKMARK]
+        }
+      )
+    })
+  })
+
   describe('toCreateProperties', function () {
     it('returns a plain javascript object with location and partitionNumber', function () {
       const siteDetail = Immutable.fromJS({

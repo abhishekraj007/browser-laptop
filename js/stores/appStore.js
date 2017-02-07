@@ -355,6 +355,7 @@ function handleChangeSettingAction (settingKey, settingValue) {
 const applyReducers = (state, action) => [
   require('../../app/browser/reducers/downloadsReducer'),
   require('../../app/browser/reducers/flashReducer'),
+  require('../../app/browser/reducers/sitesReducer'),
   require('../../app/browser/reducers/tabsReducer'),
   require('../../app/browser/reducers/spellCheckReducer'),
   require('../../app/browser/reducers/clipboardReducer')
@@ -486,40 +487,17 @@ const handleAppAction = (action) => {
       break
     case appConstants.APP_ADD_SITE:
       const oldSiteSize = appState.get('sites').size
-      if (action.siteDetail.constructor === Immutable.List) {
-        action.siteDetail.forEach((s) => {
-          appState = appState.set('sites', siteUtil.addSite(appState.get('sites'), s, action.tag))
-        })
-      } else {
-        let sites = appState.get('sites')
-        if (!action.siteDetail.get('folderId') && siteUtil.isFolder(action.siteDetail)) {
-          action.siteDetail = action.siteDetail.set('folderId', siteUtil.getNextFolderId(sites))
-        }
-        appState = appState.set('sites', siteUtil.addSite(sites, action.siteDetail, action.tag, action.originalSiteDetail))
-      }
-      if (action.destinationDetail) {
-        appState = appState.set('sites', siteUtil.moveSite(appState.get('sites'),
-          action.siteDetail, action.destinationDetail, false, false, true))
-      }
+      appState = aboutNewTabState.setSites(appState, action)
+      appState = aboutHistoryState.setHistory(appState, action)
       // If there was an item added then clear out the old history entries
       if (oldSiteSize !== appState.get('sites').size) {
         filterOutNonRecents()
       }
-      appState = aboutNewTabState.setSites(appState, action)
-      appState = aboutHistoryState.setHistory(appState, action)
       break
     case appConstants.APP_REMOVE_SITE:
-      appState = appState.set('sites', siteUtil.removeSite(appState.get('sites'), action.siteDetail, action.tag, true))
       appState = aboutNewTabState.setSites(appState, action)
       appState = aboutHistoryState.setHistory(appState, action)
       break
-    case appConstants.APP_MOVE_SITE:
-      {
-        appState = appState.set('sites', siteUtil.moveSite(appState.get('sites'),
-          action.sourceDetail, action.destinationDetail, action.prepend,
-          action.destinationIsParent, false))
-        break
-      }
     case appConstants.APP_CLEAR_HISTORY:
       appState = appState.set('sites', siteUtil.clearHistory(appState.get('sites')))
       appState = aboutNewTabState.setSites(appState, action)
