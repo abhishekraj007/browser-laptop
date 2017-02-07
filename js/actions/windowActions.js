@@ -9,7 +9,6 @@ const windowConstants = require('../constants/windowConstants')
 const appActions = require('../actions/appActions')
 const messages = require('../constants/messages')
 const siteUtil = require('../state/siteUtil')
-const UrlUtil = require('../lib/urlutil')
 const {currentWindow} = require('../../app/renderer/currentWindow')
 const windowStore = require('../stores/windowStore')
 
@@ -28,64 +27,6 @@ const windowActions = {
     dispatch({
       actionType: windowConstants.WINDOW_SET_STATE,
       windowState
-    })
-  },
-
-  /**
-   * Dispatches a message to the store to load a new URL.
-   * Both the frame's src and location properties will be updated accordingly.
-   *
-   * If the frame is a pinned site and the origin of the pinned site does
-   * not match the origin of the passed in location, then a new frame will be
-   * created for the load.
-   *
-   * In general, an iframe's src should not be updated when navigating within the frame to a new page,
-   * but the location should. For user entered new URLs, both should be updated.
-   *
-   * @param {object} frame - The frame props
-   * @param {string} location - The URL of the page to load
-   */
-  loadUrl: function (frame, location) {
-    location = location.trim()
-    let newFrame = false
-    if (frame.get('pinnedLocation') && location !== 'about:certerror' &&
-        frame.get('location') !== 'about:certerror' &&
-        location !== 'about:error' &&
-        frame.get('location') !== 'about:error') {
-      try {
-        const origin1 = new window.URL(frame.get('location')).origin
-        const origin2 = new window.URL(location).origin
-        if (origin1 !== origin2) {
-          newFrame = true
-        }
-      } catch (e) {
-        newFrame = true
-      }
-    }
-
-    if (UrlUtil.isURL(location)) {
-      location = UrlUtil.getUrlFromInput(location)
-    }
-
-    if (newFrame) {
-      this.newFrame({
-        location
-      }, true)
-    } else {
-      this.setUrl(location, frame.get('key'))
-    }
-  },
-
-  /**
-   * Dispatches a message to the store to set the new URL.
-   * @param {string} location
-   * @param {number} key
-   */
-  setUrl: function (location, key) {
-    dispatch({
-      actionType: windowConstants.WINDOW_SET_URL,
-      location,
-      key
     })
   },
 

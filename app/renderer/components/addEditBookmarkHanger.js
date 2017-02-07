@@ -154,7 +154,7 @@ class AddEditBookmarkHanger extends ImmutableComponent {
   }
   onViewBookmarks () {
     this.onClose()
-    appActions.tabCreateRequested({url: 'about:bookmarks'})
+    appActions.createTabRequested({url: 'about:bookmarks'})
   }
   render () {
     const props = this.props.isModal

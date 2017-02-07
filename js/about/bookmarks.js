@@ -251,7 +251,7 @@ class BookmarksList extends ImmutableComponent {
     if (e && e.preventDefault) {
       e.preventDefault()
     }
-    aboutActions.tabCreateRequested({
+    aboutActions.createTabRequested({
       url: entry.location,
       partitionNumber: entry.partitionNumber
     })

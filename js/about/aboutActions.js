@@ -77,7 +77,7 @@ const aboutActions = {
   /**
    * Opens a new tab and loads the specified URL.
    */
-  tabCreateRequested: function (createProperties) {
+  createTabRequested: function (createProperties) {
     aboutActions.dispatchAction({
       actionType: appConstants.APP_CREATE_TAB_REQUESTED,
       createProperties

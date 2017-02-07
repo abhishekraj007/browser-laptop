@@ -85,7 +85,7 @@ class Tabs extends ImmutableComponent {
     if (e.dataTransfer.files) {
       Array.from(e.dataTransfer.files).forEach((file) => {
         const path = encodeURI(file.path)
-        return appActions.tabCreateRequested({url: path, title: file.name})
+        return appActions.createTabRequested({url: path, title: file.name})
       })
     }
   }
@@ -106,7 +106,7 @@ class Tabs extends ImmutableComponent {
     return target.className === this.refs.newTabButton.props.className
   }
   newTab () {
-    appActions.tabCreateRequested({})
+    appActions.createTabRequested({})
   }
   onNewTabLongPress (target) {
     contextMenus.onNewTabContextMenu(target)

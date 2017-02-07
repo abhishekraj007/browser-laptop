@@ -49,7 +49,7 @@ const createFileSubmenu = () => {
         }, (paths) => {
           if (paths) {
             paths.forEach((path) => {
-              appActions.tabCreateRequested({
+              appActions.createTabRequested({
                 url: fileUrl(path),
                 windowId: focusedWindow.id
               })
@@ -280,9 +280,9 @@ const createHistorySubmenu = () => {
       click: function (item, focusedWindow) {
         getSetting(settings.HOMEPAGE).split('|').forEach((homepage, i) => {
           if (i === 0) {
-            CommonMenu.sendToFocusedWindow(focusedWindow, [messages.SHORTCUT_ACTIVE_FRAME_LOAD_URL, homepage])
+            appActions.loadURLInActiveTabRequested(focusedWindow.id, homepage)
           } else {
-            appActions.tabCreateRequested({
+            appActions.createTabRequested({
               url: homepage,
               windowId: focusedWindow.id
             })

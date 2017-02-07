@@ -19,12 +19,12 @@ class WidevineInfo extends ImmutableComponent {
     this.onViewLicense = this.onViewLicense.bind(this)
   }
   onMoreInfo () {
-    this.props.tabCreateRequestedAction({
+    this.props.createTabRequestedAction({
       url: appConfig.widevine.moreInfoUrl
     })
   }
   onViewLicense () {
-    this.props.tabCreateRequestedAction({
+    this.props.createTabRequestedAction({
       url: appConfig.widevine.licenseUrl
     })
   }

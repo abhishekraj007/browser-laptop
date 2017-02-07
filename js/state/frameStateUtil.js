@@ -309,6 +309,12 @@ const tabFromFrame = (frame) => {
   }
 }
 
+const frameOptsFromFrame = (frame) => {
+  return frame
+    .delete('tabId')
+    .delete('key')
+}
+
 /**
  * Adds a frame specified by frameOpts and newKey and sets the activeFrameKey
  * @return Immutable top level application state ready to merge back in
@@ -579,6 +585,7 @@ module.exports = {
   removeFrame,
   removeOtherFrames,
   tabFromFrame,
+  frameOptsFromFrame,
   getFrameKeyByTabId,
   getFrameTabPageIndex,
   frameStatePath,

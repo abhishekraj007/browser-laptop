@@ -59,6 +59,12 @@ const tabsReducer = (state, action) => {
     case appConstants.APP_TAB_TOGGLE_DEV_TOOLS:
       state = tabs.toggleDevTools(state, action)
       break
+    case appConstants.APP_LOAD_URL_REQUESTED:
+      state = tabs.loadURL(state, action)
+      break
+    case appConstants.APP_LOAD_URL_IN_ACTIVE_TAB_REQUESTED:
+      state = tabs.loadURLInActiveTab(state, action)
+      break
   }
   return state
 }

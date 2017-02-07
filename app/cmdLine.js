@@ -41,7 +41,7 @@ const focusOrOpenWindow = function (url) {
       location: url
     }))
   } else if (url) {
-    appActions.tabCreateRequested({
+    appActions.createTabRequested({
       url,
       windowId: win.id
     })

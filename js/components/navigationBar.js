@@ -32,6 +32,7 @@ class NavigationBar extends ImmutableComponent {
     this.onToggleBookmark = this.onToggleBookmark.bind(this)
     this.onStop = this.onStop.bind(this)
     this.onReload = this.onReload.bind(this)
+    this.onHome = this.onHome.bind(this)
     this.onReloadLongPress = this.onReloadLongPress.bind(this)
     this.onNoScript = this.onNoScript.bind(this)
   }
@@ -69,15 +70,14 @@ class NavigationBar extends ImmutableComponent {
     contextMenus.onReloadContextMenu(target)
   }
 
-  onHome () {
+  onHome (e) {
+    const tabId = this.activeFrame.get('tabId')
     getSetting(settings.HOMEPAGE).split('|')
       .forEach((homepage, i) => {
-        if (i === 0) {
-          ipc.emit(messages.SHORTCUT_ACTIVE_FRAME_LOAD_URL, {}, homepage)
+        if (i === 0 && !eventUtil.isForSecondaryAction(e)) {
+          appActions.loadURLRequested(tabId, homepage)
         } else {
-          appActions.tabCreateRequested(Immutable.fromJS({
-            url: homepage
-          }))
+          appActions.createTabRequested({ url: homepage })
         }
       })
   }

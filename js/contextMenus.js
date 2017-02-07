@@ -103,7 +103,7 @@ function urlBarTemplateInit (searchDetail, activeFrame, e) {
       label: locale.translation('pasteAndGo'),
       enabled: hasClipboard,
       click: (item) => {
-        windowActions.loadUrl(activeFrame, clipboardText)
+        appActions.loadURLRequested(activeFrame.get('tabId'), clipboardText)
       }
     })
   } else {
@@ -113,7 +113,7 @@ function urlBarTemplateInit (searchDetail, activeFrame, e) {
       label: locale.translation('pasteAndSearch'),
       enabled: hasClipboard,
       click: (item) => {
-        windowActions.loadUrl(activeFrame, searchUrl)
+        appActions.loadURLRequested(activeFrame.get('tabId'), searchUrl)
       }
     })
   }
@@ -410,7 +410,7 @@ function moreBookmarksTemplateInit (allBookmarkItems, bookmarks, activeFrame) {
   template.push({
     l10nLabelId: 'moreBookmarks',
     click: function () {
-      appActions.tabCreateRequested({
+      appActions.createTabRequested({
         url: 'about:bookmarks'
       })
       windowActions.setContextMenuDetail()
@@ -476,7 +476,7 @@ function flashTemplateInit (frameProps) {
     template.push({
       label: locale.translation('openFlashPreferences'),
       click: () => {
-        appActions.tabCreateRequested({
+        appActions.createTabRequested({
           url: 'about:preferences#security',
           windowId: frameProps.get('windowId')
         })
@@ -520,6 +520,11 @@ function tabTemplateInit (frameProps) {
         click: (item) => {
           appActions.tabCloned(frameProps.get('tabId'))
         }
+      }, {
+        label: locale.translation('detach'),
+        click: (item) => {
+          windowActions.setActiveFrameShortcut(frameProps, messages.DETACH)
+        }
       })
   }
 
@@ -530,6 +535,7 @@ function tabTemplateInit (frameProps) {
         label: locale.translation(isPinned ? 'unpinTab' : 'pinTab'),
         click: (item) => {
           // Handle converting the current tab window into a pinned site
+          console.log('tabId for pin:', frameProps.get('tabId'))
           appActions.tabPinned(frameProps.get('tabId'), !isPinned)
         }
       })
@@ -760,7 +766,7 @@ const openInNewTabMenuItem = (url, isPrivate, partitionNumber, openerTabId) => {
       label: locale.translation('openInNewTabs'),
       click: () => {
         for (let i = 0; i < url.length; ++i) {
-          appActions.tabCreateRequested({
+          appActions.createTabRequested({
             url: url[i],
             isPrivate,
             partitionNumber: partitionNumber[i],
@@ -774,7 +780,7 @@ const openInNewTabMenuItem = (url, isPrivate, partitionNumber, openerTabId) => {
     return {
       label: locale.translation('openInNewTab'),
       click: () => {
-        appActions.tabCreateRequested({
+        appActions.createTabRequested({
           url,
           isPrivate,
           partitionNumber,
@@ -802,7 +808,7 @@ const openInNewPrivateTabMenuItem = (url, openerTabId) => {
       label: locale.translation('openInNewPrivateTabs'),
       click: () => {
         for (let i = 0; i < url.length; ++i) {
-          appActions.tabCreateRequested({
+          appActions.createTabRequested({
             url: url[i],
             isPrivate: true,
             openerTabId,
@@ -815,7 +821,7 @@ const openInNewPrivateTabMenuItem = (url, openerTabId) => {
     return {
       label: locale.translation('openInNewPrivateTab'),
       click: () => {
-        appActions.tabCreateRequested({
+        appActions.createTabRequested({
           url,
           isPrivate: true,
           openerTabId,
@@ -842,7 +848,7 @@ const openInNewSessionTabMenuItem = (url, openerTabId) => {
       label: locale.translation('openInNewSessionTabs'),
       click: (item) => {
         for (let i = 0; i < url.length; ++i) {
-          appActions.tabCreateRequested({
+          appActions.createTabRequested({
             url: url[i],
             isPartitioned: true,
             openerTabId,
@@ -855,7 +861,7 @@ const openInNewSessionTabMenuItem = (url, openerTabId) => {
     return {
       label: locale.translation('openInNewSessionTab'),
       click: (item) => {
-        appActions.tabCreateRequested({
+        appActions.createTabRequested({
           url,
           isPartitioned: true,
           openerTabId,
@@ -906,7 +912,7 @@ const searchSelectionMenuItem = (location) => {
         let activeFrame = windowStore.getState().get('activeFrameKey')
         let frame = windowStore.getFrame(activeFrame)
         let searchUrl = windowStore.getState().getIn(['searchDetail', 'searchURL']).replace('{searchTerms}', encodeURIComponent(location))
-        appActions.tabCreateRequested({
+        appActions.createTabRequested({
           url: searchUrl,
           isPrivate: frame.get('isPrivate'),
           partitionNumber: frame.get('partitionNumber'),
@@ -974,7 +980,7 @@ function mainTemplateInit (nodeProps, frame, tab) {
         label: locale.translation('openImageInNewTab'),
         click: (item) => {
           if (nodeProps.srcURL) {
-            appActions.tabCreateRequested({
+            appActions.createTabRequested({
               url: nodeProps.srcURL,
               openerTabId: frame.get('tabId'),
               partition: getPartitionFromNumber(frame.get('partitionNumber'), frame.get('isPrivate'))
@@ -1010,7 +1016,7 @@ function mainTemplateInit (nodeProps, frame, tab) {
             let searchUrl = windowStore.getState().getIn(['searchDetail', 'searchURL'])
               .replace('{searchTerms}', encodeURIComponent(nodeProps.srcURL))
               .replace('?q', 'byimage?image_url')
-            appActions.tabCreateRequested({
+            appActions.createTabRequested({
               url: searchUrl,
               isPrivate: frame.get('isPrivate'),
               partitionNumber: frame.get('partitionNumber')
@@ -1466,7 +1472,7 @@ function onBackButtonHistoryMenu (activeFrame, history, target) {
         icon: history.entries[index].icon,
         click: (e) => {
           if (eventUtil.isForSecondaryAction(e)) {
-            appActions.tabCreateRequested({
+            appActions.createTabRequested({
               url,
               partitionNumber: activeFrame.props.frame.get('partitionNumber'),
               active: !!e.shiftKey
@@ -1484,7 +1490,7 @@ function onBackButtonHistoryMenu (activeFrame, history, target) {
       {
         label: locale.translation('showAllHistory'),
         click: (e) => {
-          appActions.tabCreateRequested({
+          appActions.createTabRequested({
             url: 'about:history'
           })
           windowActions.setContextMenuDetail()
@@ -1513,7 +1519,7 @@ function onForwardButtonHistoryMenu (activeFrame, history, target) {
         icon: history.entries[index].icon,
         click: (e) => {
           if (eventUtil.isForSecondaryAction(e)) {
-            appActions.tabCreateRequested({
+            appActions.createTabRequested({
               url,
               partitionNumber: activeFrame.props.frame.get('partitionNumber'),
               active: !!e.shiftKey
@@ -1531,7 +1537,7 @@ function onForwardButtonHistoryMenu (activeFrame, history, target) {
       {
         label: locale.translation('showAllHistory'),
         click: (e) => {
-          appActions.tabCreateRequested({
+          appActions.createTabRequested({
             url: 'about:history'
           })
           windowActions.setContextMenuDetail()

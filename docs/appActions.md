@@ -43,13 +43,37 @@ A new tab has been created
 
 
 
-### tabCreateRequested(createProperties) 
+### createTabRequested(createProperties) 
 
 A request for a new tab has been made with the specified createProperties
 
 **Parameters**
 
 **createProperties**: `Object`, A request for a new tab has been made with the specified createProperties
+
+
+
+### loadURLRequested(tabId, url) 
+
+A request for a URL load
+
+**Parameters**
+
+**tabId**: `number`, the tab ID to load the URL inside of
+
+**url**: `string`, The url to load
+
+
+
+### loadURLInActiveTabRequested(windowId, url) 
+
+A request for a URL load for the active tab of the specified window
+
+**Parameters**
+
+**windowId**: `number`, the window ID to load the URL inside of
+
+**url**: `string`, The url to load
 
 
 

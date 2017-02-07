@@ -181,7 +181,7 @@ class UrlBar extends ImmutableComponent {
           location = location.replace(/^(\s*javascript:)+/i, '')
           const isLocationUrl = isUrl(location)
           if (!isLocationUrl && e.ctrlKey) {
-            windowActions.loadUrl(this.activeFrame, `www.${location}.com`)
+            appActions.loadURLRequested(this.activeFrame.get('tabId'), `www.${location}.com`)
           } else if (this.shouldRenderUrlBarSuggestions &&
               (typeof this.activeIndex === 'number' && this.activeIndex >= 0 || this.locationValueSuffix && this.autocompleteEnabled)) {
             // Hack to make alt enter open a new tab for url bar suggestions when hitting enter on them.
@@ -200,16 +200,16 @@ class UrlBar extends ImmutableComponent {
               : this.buildSearchUrl(location)
             // do search.
             if (e.altKey) {
-              appActions.tabCreateRequested({
+              appActions.createTabRequested({
                 url: location
               })
             } else if (e.metaKey) {
-              appActions.tabCreateRequested({
+              appActions.createTabRequested({
                 url: location,
                 active: !!e.shiftKey
               })
             } else {
-              windowActions.loadUrl(this.activeFrame, location)
+              appActions.loadURLRequested(this.activeFrame.get('tabId'), location)
             }
           }
         }
@@ -408,6 +408,7 @@ class UrlBar extends ImmutableComponent {
       } else if (this.props.location !== prevProps.location) {
         // This is a url nav change
         this.setValue(UrlUtil.getDisplayLocation(this.props.location, getSetting(settings.PDFJS_ENABLED)))
+        console.log('nav changed!!!:', this.props.location)
       } else if (this.props.hasLocationValueSuffix && this.isActive &&
         (this.props.hasLocationValueSuffix !== prevProps.hasLocationValueSuffix ||
          this.props.urlbar.get('location') !== prevProps.urlbar.get('location'))) {

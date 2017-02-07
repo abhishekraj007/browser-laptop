@@ -3,7 +3,6 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 const React = require('react')
-const ipc = require('electron').ipcRenderer
 const Immutable = require('immutable')
 const ImmutableComponent = require('./immutableComponent')
 const config = require('../constants/config')
@@ -14,7 +13,6 @@ const windowActions = require('../actions/windowActions')
 const appActions = require('../actions/appActions')
 const urlParse = require('../../app/common/urlParse')
 const cx = require('../lib/classSet')
-const messages = require('../constants/messages')
 const siteUtil = require('../state/siteUtil')
 
 class BraveryPanel extends ImmutableComponent {
@@ -131,15 +129,15 @@ class BraveryPanel extends ImmutableComponent {
     })
   }
   onReload () {
-    ipc.emit(messages.SHORTCUT_ACTIVE_FRAME_LOAD_URL, {}, this.props.activeRequestedLocation)
+    appActions.loadURLRequested(this.props.frameProps.get('tabId'), this.props.activeRequestedLocation)
   }
   onEditGlobal () {
-    appActions.tabCreateRequested({
+    appActions.createTabRequested({
       url: 'about:preferences#shields'
     })
   }
   onInfoClick () {
-    appActions.tabCreateRequested({
+    appActions.createTabRequested({
       url: config.fingerprintingInfoUrl
     })
   }

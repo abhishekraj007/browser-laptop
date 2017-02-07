@@ -24,7 +24,7 @@ class NotificationItem extends ImmutableComponent {
   }
 
   openAdvanced () {
-    appActions.tabCreateRequested({
+    appActions.createTabRequested({
       url: this.props.detail.get('options').get('advancedLink')
     })
   }

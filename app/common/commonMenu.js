@@ -80,7 +80,7 @@ module.exports.newTabMenuItem = (openerTabId) => {
     accelerator: 'CmdOrCtrl+T',
     click: function (item, focusedWindow) {
       ensureAtLeastOneWindow(Immutable.fromJS({}))
-      appActions.tabCreateRequested({
+      appActions.createTabRequested({
         url: 'about:newtab',
         windowId: getCurrentWindowId(),
         openerTabId
@@ -95,7 +95,7 @@ module.exports.newPrivateTabMenuItem = () => {
     accelerator: 'Shift+CmdOrCtrl+P',
     click: function (item, focusedWindow) {
       ensureAtLeastOneWindow(Immutable.fromJS({ isPrivate: true }))
-      appActions.tabCreateRequested({
+      appActions.createTabRequested({
         url: 'about:newtab',
         windowId: getCurrentWindowId(),
         isPrivate: true
@@ -110,7 +110,7 @@ module.exports.newPartitionedTabMenuItem = () => {
     accelerator: 'Shift+CmdOrCtrl+S',
     click: function (item, focusedWindow) {
       ensureAtLeastOneWindow(Immutable.fromJS({ isPartitioned: true }))
-      appActions.tabCreateRequested({
+      appActions.createTabRequested({
         url: 'about:newtab',
         windowId: getCurrentWindowId(),
         isPartitioned: true

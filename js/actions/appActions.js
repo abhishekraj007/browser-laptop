@@ -5,7 +5,6 @@
 'use strict'
 const AppDispatcher = require('../dispatcher/appDispatcher')
 const appConstants = require('../constants/appConstants')
-const {makeImmutable} = require('../../app/common/state/immutableUtil')
 
 const appActions = {
   /**
@@ -81,15 +80,36 @@ const appActions = {
    * A request for a new tab has been made with the specified createProperties
    * @param {Object} createProperties
    */
-  tabCreateRequested: function (createProperties) {
-    if (process.type === 'renderer') {
-      const {currentWindowId} = require('../../app/renderer/currentWindow')
-      createProperties = makeImmutable(createProperties)
-      createProperties = createProperties.set('windowId', currentWindowId)
-    }
+  createTabRequested: function (createProperties) {
     AppDispatcher.dispatch({
       actionType: appConstants.APP_CREATE_TAB_REQUESTED,
       createProperties
+    })
+  },
+
+  /**
+   * A request for a URL load
+   * @param {number} tabId - the tab ID to load the URL inside of
+   * @param {string} url - The url to load
+   */
+  loadURLRequested: function (tabId, url) {
+    AppDispatcher.dispatch({
+      actionType: appConstants.APP_LOAD_URL_REQUESTED,
+      tabId,
+      url
+    })
+  },
+
+  /**
+   * A request for a URL load for the active tab of the specified window
+   * @param {number} windowId - the window ID to load the URL inside of
+   * @param {string} url - The url to load
+   */
+  loadURLInActiveTabRequested: function (windowId, url) {
+    AppDispatcher.dispatch({
+      actionType: appConstants.APP_LOAD_URL_IN_ACTIVE_TAB_REQUESTED,
+      windowId,
+      url
     })
   },
 

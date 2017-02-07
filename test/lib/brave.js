@@ -498,7 +498,7 @@ var exports = {
     this.app.client.addCommand('newTab', function (createProperties = {}) {
       return this
         .execute(function (createProperties) {
-          return devTools('appActions').tabCreateRequested(createProperties)
+          return devTools('appActions').createTabRequested(createProperties)
         }, createProperties)
     })
 

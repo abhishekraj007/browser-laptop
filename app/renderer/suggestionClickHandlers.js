@@ -14,14 +14,14 @@ const navigateSiteClickHandler = (formatUrl) => (site, isForSecondaryAction, shi
   // When clicked make sure to hide autocomplete
   windowActions.setRenderUrlBarSuggestions(false)
   if (isForSecondaryAction) {
-    appActions.tabCreateRequested({
+    appActions.createTabRequested({
       url,
       partitionNumber: site && site.get && site.get('partitionNumber') || undefined,
       active: !!shiftKey
     })
   } else {
     const activeFrame = getActiveFrame(windowStore.state)
-    windowActions.loadUrl(activeFrame, url)
+    appActions.loadURLRequested(activeFrame.get('tabId'), url)
     windowActions.setUrlBarActive(false)
   }
 }

@@ -398,11 +398,6 @@ class Main extends ImmutableComponent {
     ipc.on(messages.SHORTCUT_ACTIVE_FRAME_BACK, this.onBack)
     ipc.on(messages.SHORTCUT_ACTIVE_FRAME_FORWARD, this.onForward)
 
-    ipc.on(messages.SHORTCUT_ACTIVE_FRAME_LOAD_URL, (e, url) => {
-      const activeFrame = frameStateUtil.getActiveFrame(self.props.windowState)
-      windowActions.loadUrl(activeFrame, url)
-    })
-
     ipc.on(messages.CERT_ERROR, (e, details) => {
       const frame = frameStateUtil.getFrameByTabId(self.props.windowState, details.tabId)
       if (frame && (frame.get('location') === details.url ||
@@ -411,7 +406,7 @@ class Main extends ImmutableComponent {
           url: details.url,
           error: details.error
         })
-        windowActions.loadUrl(frame, 'about:certerror')
+        appActions.loadURLRequested(frame.get('tabId'), 'about:certerror')
       }
     })
 
@@ -502,10 +497,20 @@ class Main extends ImmutableComponent {
     })
     currentWindow.on('resize', onWindowResize)
     currentWindow.on('move', onWindowMove)
-    currentWindow.on('focus', function () {
+    currentWindow.on('focus', () => {
+      const pinnedFrames = this.props.windowState.get('frames').filter((frame) => frame.get('pinnedLocation'))
+      pinnedFrames.forEach((frame) => {
+        const webview = document.querySelector(`webview[data-frame-key="${frame.get('key')}"]`)
+        webview.attachGuest(frame.get('guestInstanceId'))
+      })
       windowActions.onFocusChanged(true)
     })
-    currentWindow.on('blur', function () {
+    currentWindow.on('blur', () => {
+      const pinnedFrames = this.props.windowState.get('frames').filter((frame) => frame.get('pinnedLocation'))
+      pinnedFrames.forEach((frame) => {
+        const webview = document.querySelector(`webview[data-frame-key="${frame.get('key')}"]`)
+        webview.detachGuest()
+      })
       appActions.windowBlurred(currentWindow.id)
       windowActions.onFocusChanged(false)
     })
@@ -663,7 +668,7 @@ class Main extends ImmutableComponent {
     if (e.dataTransfer.files.length > 0) {
       Array.from(e.dataTransfer.files).forEach((file) => {
         const url = encodeURI(file.path)
-        appActions.tabCreateRequested({ url })
+        appActions.createTabRequested({ url })
         return
       })
     } else if (e.dataTransfer.getData('text/plain')) {

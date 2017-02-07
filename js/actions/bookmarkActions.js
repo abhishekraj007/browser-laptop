@@ -20,7 +20,7 @@ const bookmarkActions = {
     // Only load the first 25 tabs as loaded
     bookmarks
       .forEach((bookmark, i) =>
-         appActions.tabCreateRequested(
+         appActions.createTabRequested(
            Object.assign(siteUtil.toCreateProperties(bookmark), {
              unloaded: i > 25,
              active: false
@@ -35,13 +35,13 @@ const bookmarkActions = {
     const isFolder = siteUtil.isFolder(bookmarkItem)
     if (!isFolder) {
       if (eventUtil.isForSecondaryAction(e)) {
-        appActions.tabCreateRequested({
+        appActions.createTabRequested({
           url: bookmarkItem.get('location'),
           partitionNumber: bookmarkItem && bookmarkItem.get && bookmarkItem.get('partitionNumber') || undefined,
           active: !!e.shiftKey || getSetting(SWITCH_TO_NEW_TABS)
         })
       } else {
-        windowActions.loadUrl(activeFrame, bookmarkItem.get('location'))
+        appActions.loadURLRequested(activeFrame.get('tabId'), bookmarkItem.get('location'))
       }
       windowActions.setContextMenuDetail()
       return true
