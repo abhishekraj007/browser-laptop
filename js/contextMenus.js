@@ -520,12 +520,16 @@ function tabTemplateInit (frameProps) {
         click: (item) => {
           appActions.tabCloned(frameProps.get('tabId'))
         }
-      }, {
+      })
+
+    if (windowStore.getState().get('frames').size > 1) {
+      template.push({
         label: locale.translation('detach'),
         click: (item) => {
           windowActions.setActiveFrameShortcut(frameProps, messages.DETACH)
         }
       })
+    }
   }
 
   if (!frameProps.get('isPrivate')) {

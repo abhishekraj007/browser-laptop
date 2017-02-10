@@ -65,7 +65,7 @@ class PinnedTabs extends ImmutableComponent {
          this.props.pinnedTabs
            .map((tab) =>
              <Tab ref={(node) => this.tabRefs.push(node)}
-               draggingOverData={this.props.draggingOverData}
+               dragData={this.props.dragData}
                tab={tab}
                key={'tab-' + tab.get('frameKey')}
                paintTabs={this.props.paintTabs}

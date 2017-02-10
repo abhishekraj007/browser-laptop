@@ -54,7 +54,6 @@ class TabPage extends ImmutableComponent {
       if (sourceDragData.get('pinnedLocation')) {
         appActions.tabPinned(sourceDragData.get('tabId'), false)
       }
-      windowActions.setIsBeingDraggedOverDetail()
     }, 0)
   }
 
@@ -85,7 +84,7 @@ class TabPages extends ImmutableComponent {
   render () {
     const tabPageCount = Math.ceil(this.props.frames.size / this.props.tabsPerTabPage)
     let sourceDragFromPageIndex
-    const sourceDragData = dnd.getInProcessDragData()
+    const sourceDragData = dnd.getInterBraveDragData()
     if (sourceDragData) {
       sourceDragFromPageIndex = this.props.frames.findIndex((frame) => frame.get('key') === sourceDragData.get('key'))
       if (sourceDragFromPageIndex !== -1) {

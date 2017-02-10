@@ -1134,7 +1134,7 @@ class Main extends ImmutableComponent {
         {
           showBookmarksToolbar
           ? <BookmarksToolbar
-            draggingOverData={this.props.windowState.getIn(['ui', 'dragging', 'draggingOver', 'dragType']) === dragTypes.BOOKMARK && this.props.windowState.getIn(['ui', 'dragging', 'draggingOver'])}
+            draggingOverData={this.props.appState.getIn(['dragData', 'dragOverData', 'draggingOverType']) === dragTypes.BOOKMARK && this.props.appState.getIn(['dragData', 'dragOverData'])}
             showFavicon={showFavicon}
             showOnlyFavicon={showOnlyFavicon}
             shouldAllowWindowDrag={shouldAllowWindowDrag && !isWindows}
@@ -1163,7 +1163,7 @@ class Main extends ImmutableComponent {
         <TabsToolbar
           paintTabs={getSetting(settings.PAINT_TABS)}
           shouldAllowWindowDrag={shouldAllowWindowDrag}
-          draggingOverData={this.props.windowState.getIn(['ui', 'dragging', 'draggingOver', 'dragType']) === dragTypes.TAB && this.props.windowState.getIn(['ui', 'dragging', 'draggingOver'])}
+          dragData={this.props.appState.getIn(['dragData', 'type']) === dragTypes.TAB && this.props.appState.get('dragData')}
           previewTabs={getSetting(settings.SHOW_TAB_PREVIEWS)}
           tabsPerTabPage={tabsPerPage}
           tabPageIndex={this.props.windowState.getIn(['ui', 'tabs', 'tabPageIndex'])}

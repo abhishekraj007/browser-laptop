@@ -150,7 +150,8 @@ const api = {
       tab.on('responsive', () => {
         console.log('responsive')
       })
-      tab.on('did-attach', () => {
+      tab.on('did-attach', (e) => {
+        console.log('----did-attach from tabs.js', e)
         updateTab(tabId)
       })
       tab.on('page-title-updated', function () {

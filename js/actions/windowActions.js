@@ -361,22 +361,6 @@ const windowActions = {
   },
 
   /**
-   * Dispatches a message to the store to indicate that something is dragging over this item.
-   *
-   * @param {string} dragType - The type of drag operation being performed
-   * @param {Object} dragOverKey - A unique identifier for the storage for the item being dragged over
-   * @param {Object} dragDetail - detail about the item drag operation
-   */
-  setIsBeingDraggedOverDetail: function (dragType, dragOverKey, dragDetail) {
-    dispatch({
-      dragType,
-      actionType: windowConstants.WINDOW_SET_IS_BEING_DRAGGED_OVER_DETAIL,
-      dragOverKey,
-      dragDetail
-    })
-  },
-
-  /**
    * Dispatches a message to the store to indicate that the specified frame should move locations.
    *
    * @param {Object} sourceFrameProps - the frame properties for the webview to move.

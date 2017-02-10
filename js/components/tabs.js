@@ -13,6 +13,7 @@ const windowStore = require('../stores/windowStore')
 const dragTypes = require('../constants/dragTypes')
 const cx = require('../lib/classSet')
 const contextMenus = require('../contextMenus')
+const {currentWindowId} = require('../../app/renderer/currentWindow')
 
 const LongPressButton = require('./longPressButton')
 const Tab = require('./tab')
@@ -63,6 +64,8 @@ class Tabs extends ImmutableComponent {
   }
 
   onDrop (e) {
+    console.log('onDrop------')
+    appActions.dataDropped(currentWindowId)
     const clientX = e.clientX
     const sourceDragData = dndData.getDragData(e.dataTransfer, dragTypes.TAB)
     if (sourceDragData) {
@@ -74,6 +77,13 @@ class Tabs extends ImmutableComponent {
         if (droppedOnTab) {
           const isLeftSide = dnd.isLeftSide(ReactDOM.findDOMNode(droppedOnTab), clientX)
           const droppedOnFrameProps = windowStore.getFrame(droppedOnTab.props.tab.get('frameKey'))
+
+          // If this is a different window ID than where the drag started, then
+          // the tear off will be done by tab.js
+          if (this.props.dragData.get('windowId') !== currentWindowId) {
+            return
+          }
+
           windowActions.moveTab(sourceDragData, droppedOnFrameProps, isLeftSide)
           if (sourceDragData.get('pinnedLocation')) {
             appActions.tabPinned(sourceDragData.get('tabId'), false)
@@ -135,7 +145,7 @@ class Tabs extends ImmutableComponent {
           this.props.currentTabs
             .map((tab) =>
               <Tab ref={(node) => this.tabRefs.push(node)}
-                draggingOverData={this.props.draggingOverData}
+                dragData={this.props.dragData}
                 tab={tab}
                 key={'tab-' + tab.get('frameKey')}
                 paintTabs={this.props.paintTabs}

@@ -89,7 +89,11 @@ const appConstants = {
   APP_CLIPBOARD_TEXT_UPDATED: _,
   APP_TAB_TOGGLE_DEV_TOOLS: _,
   APP_TAB_CLONED: _,
-  APP_TAB_PINNED: _
+  APP_TAB_PINNED: _,
+  APP_DRAG_STARTED: _,
+  APP_DRAG_STOPPED: _,
+  APP_DATA_DROPPED: _,
+  APP_DRAGGED_OVER: _
 }
 
 module.exports = mapValuesByKeys(appConstants)

@@ -811,6 +811,22 @@ const handleAppAction = (action) => {
       const pdf = require('../../app/pdf')
       appState = pdf.renderUrlToPdf(appState, action)
       break
+    case appConstants.APP_DRAG_STARTED:
+      appState = appState.set('dragData', Immutable.fromJS({
+        windowId: action.windowId,
+        type: action.dragType,
+        data: action.dragData
+      }))
+      break
+    case appConstants.APP_DRAG_STOPPED:
+      appState = appState.delete('dragData')
+      break
+    case appConstants.APP_DATA_DROPPED:
+      appState = appState.setIn(['dragData', 'dropWindowId'], action.dropWindowId)
+      break
+    case appConstants.APP_DRAGGED_OVER:
+      appState = appState.mergeIn(['dragData', 'dragOverData'], action.draggedOverData)
+      break
     default:
   }
 

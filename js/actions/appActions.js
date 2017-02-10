@@ -866,6 +866,52 @@ const appActions = {
       },
       frameOpts
     })
+  },
+
+  /**
+   * Notifies the app that a drag operation started from within the app
+   * @param {number} windowId - The source windowId the drag is starting from
+   * @param {string} dragType - The type of data
+   * @param {object} dragData - Data being transfered
+   */
+  dragStarted: function (windowId, dragType, dragData) {
+    AppDispatcher.dispatch({
+      actionType: appConstants.APP_DRAG_STARTED,
+      windowId,
+      dragType,
+      dragData
+    })
+  },
+
+  /**
+   * Notifies the app that a drag operation stopped from within the app
+   * @param {string} dragType - The type of data
+   * @param {object} dragData - Data being transfered
+   */
+  dragEnded: function () {
+    AppDispatcher.dispatch({
+      actionType: appConstants.APP_DRAG_STOPPED
+    })
+  },
+
+  /**
+   * Notifies the app that a drop operation occurred
+   */
+  dataDropped: function (dropWindowId) {
+    AppDispatcher.dispatch({
+      actionType: appConstants.APP_DATA_DROPPED,
+      dropWindowId
+    })
+  },
+
+  /**
+   * Notifies the app that a drop operation occurred
+   */
+  draggedOver: function (draggedOverData) {
+    AppDispatcher.dispatch({
+      actionType: appConstants.APP_DRAGGED_OVER,
+      draggedOverData
+    })
   }
 }
 

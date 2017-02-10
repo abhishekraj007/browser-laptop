@@ -38,6 +38,30 @@ class AppDispatcher {
     }
   }
 
+  dispatchToOwnRegisteredCallbacks (payload) {
+    // First create array of promises for callbacks to reference.
+    const resolves = []
+    const rejects = []
+    this.promises = this.callbacks.map(function (_, i) {
+      return new Promise(function (resolve, reject) {
+        resolves[i] = resolve
+        rejects[i] = reject
+      })
+    })
+
+    // Dispatch to callbacks and resolve/reject promises.
+    this.callbacks.forEach(function (callback, i) {
+      // Callback can return an obj, to resolve, or a promise, to chain.
+      // See waitFor() for why this might be useful.
+      Promise.resolve(callback(payload)).then(function () {
+        resolves[i](payload)
+      }, function () {
+        rejects[i](new Error('Dispatcher callback unsuccessful'))
+      })
+    })
+    this.promises = []
+  }
+
   /**
    * dispatch
    * Dispatches registered callbacks. If `dispatch` is called from the main process
@@ -51,34 +75,22 @@ class AppDispatcher {
     if (payload.actionType === undefined) {
       throw new Error('Dispatcher: Undefined action for payload', payload)
     }
-    // First create array of promises for callbacks to reference.
-    const resolves = []
-    const rejects = []
-    this.promises = this.callbacks.map(function (_, i) {
-      return new Promise(function (resolve, reject) {
-        resolves[i] = resolve
-        rejects[i] = reject
-      })
-    })
-    // Dispatch to callbacks and resolve/reject promises.
-    this.callbacks.forEach(function (callback, i) {
-      // Callback can return an obj, to resolve, or a promise, to chain.
-      // See waitFor() for why this might be useful.
-      Promise.resolve(callback(payload)).then(function () {
-        resolves[i](payload)
-      }, function () {
-        rejects[i](new Error('Dispatcher callback unsuccessful'))
-      })
-    })
-    this.promises = []
 
     if (process.type === 'renderer') {
-      // TODO: Figure out routing app actions better
-      if (payload.actionType === 'app-new-web-contents-added') {
-        return
+      const {currentWindowId} = require('../../app/renderer/currentWindow')
+      if (!payload.queryInfo || !payload.queryInfo.windowId || payload.queryInfo.windowId === currentWindowId) {
+        this.dispatchToOwnRegisteredCallbacks(payload)
+      } else {
+        console.log('!!!!!!!!!!!skipping for own registered callback payload:', payload)
       }
-      const ipc = electron.ipcRenderer
-      ipc.send(messages.DISPATCH_ACTION, Serializer.serialize(payload))
+      if (!payload.queryInfo || !payload.queryInfo.windowId || payload.queryInfo.windowId !== currentWindowId) {
+        const ipc = electron.ipcRenderer
+        ipc.send(messages.DISPATCH_ACTION, Serializer.serialize(payload))
+      } else {
+        console.log('!!!!!!!!!!!skipping for payload:', payload)
+      }
+    } else {
+      this.dispatchToOwnRegisteredCallbacks(payload)
     }
   }
 

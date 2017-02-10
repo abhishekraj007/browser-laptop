@@ -34,6 +34,7 @@ class TabsToolbar extends ImmutableComponent {
   }
 
   render () {
+    console.log('this.props.tabs:', this.props.tabs.toJS(), this.props)
     const index = this.props.previewTabPageIndex !== undefined
       ? this.props.previewTabPageIndex : this.props.tabPageIndex
     const startingFrameIndex = index * this.props.tabsPerTabPage
@@ -49,7 +50,7 @@ class TabsToolbar extends ImmutableComponent {
           activeFrameKey={this.props.activeFrameKey}
           paintTabs={this.props.paintTabs}
           previewTabs={this.props.previewTabs}
-          draggingOverData={this.props.draggingOverData}
+          dragData={this.props.dragData}
           tabPageIndex={this.props.tabPageIndex}
           pinnedTabs={pinnedTabs}
           />
@@ -59,7 +60,7 @@ class TabsToolbar extends ImmutableComponent {
         ref='tabs'
         tabs={unpinnedTabs}
         shouldAllowWindowDrag={this.props.shouldAllowWindowDrag}
-        draggingOverData={this.props.draggingOverData}
+        dragData={this.props.dragData}
         paintTabs={this.props.paintTabs}
         previewTabs={this.props.previewTabs}
         tabsPerTabPage={this.props.tabsPerTabPage}

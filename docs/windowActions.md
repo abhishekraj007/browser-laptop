@@ -264,20 +264,6 @@ Dispatches a message to the store to set the tab page index.
 
 
 
-### setIsBeingDraggedOverDetail(dragType, dragOverKey, dragDetail) 
-
-Dispatches a message to the store to indicate that something is dragging over this item.
-
-**Parameters**
-
-**dragType**: `string`, The type of drag operation being performed
-
-**dragOverKey**: `Object`, A unique identifier for the storage for the item being dragged over
-
-**dragDetail**: `Object`, detail about the item drag operation
-
-
-
 ### moveTab(sourceFrameProps, destinationFrameProps, prepend) 
 
 Dispatches a message to the store to indicate that the specified frame should move locations.

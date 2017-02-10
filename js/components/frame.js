@@ -26,7 +26,7 @@ const {isFrameError} = require('../../app/common/lib/httpUtil')
 const locale = require('../l10n')
 const appConfig = require('../constants/appConfig')
 const {getSiteSettingsForHostPattern} = require('../state/siteSettings')
-const {currentWindowWebContents, isFocused} = require('../../app/renderer/currentWindow')
+const {currentWindowId, currentWindowWebContents, isFocused} = require('../../app/renderer/currentWindow')
 const windowStore = require('../stores/windowStore')
 const appStoreRenderer = require('../stores/appStoreRenderer')
 const siteSettings = require('../state/siteSettings')
@@ -304,26 +304,11 @@ class Frame extends ImmutableComponent {
       newSrc = getTargetAboutUrl(newSrc)
     }
 
-    let guestInstanceId = null
-
     // Create the webview dynamically because React doesn't whitelist all
     // of the attributes we need
-    let webviewAdded = false
     if (this.shouldCreateWebview()) {
-      guestInstanceId = this.props.guestInstanceId
       this.webview = document.createElement('webview')
-      if (guestInstanceId) {
-        if (!this.webview.attachGuest(guestInstanceId)) {
-          console.error('could not set guestInstanceId ' + guestInstanceId)
-          guestInstanceId = null
-        } else {
-          console.log('----set guest instance id: ', guestInstanceId)
-        }
-      } else {
-        console.log('---setting partition')
-        // The partition is guaranteed to be initialized by now by the browser process
-        this.webview.setAttribute('partition', frameStateUtil.getPartition(this.frame))
-      }
+      this.webview.setAttribute('data-frame-key', this.props.frameKey)
 
       this.addEventListeners()
       if (cb) {
@@ -333,20 +318,20 @@ class Frame extends ImmutableComponent {
           this.runOnDomReady()
           delete this.runOnDomReady
         }
-        this.webview.addEventListener('did-attach', eventCallback)
+        this.webview.addEventListener('guest-ready', eventCallback)
       }
 
-      webviewAdded = true
-    }
-
-    if (!this.props.guestInstanceId) {
-      console.log('NO GUEST INSTANCE ID, SETTING SRC')
-      // this.webview.setAttribute('src', newSrc)
-    }
-
-    this.webview.setAttribute('data-frame-key', this.props.frameKey)
-
-    if (webviewAdded) {
+      if (this.props.guestInstanceId) {
+        console.log('--------ATTACH GUEST: ', this.props.guestInstanceId)
+        if (!this.webview.attachGuest(this.props.guestInstanceId)) {
+          console.error('could not set guestInstanceId ' + this.props.guestInstanceId)
+        }
+      } else {
+        console.log('--------_SRC: ', newSrc)
+        // The partition is guaranteed to be initialized by now by the browser process
+        this.webview.setAttribute('partition', frameStateUtil.getPartition(this.frame))
+        this.webview.setAttribute('src', newSrc)
+      }
       this.webviewContainer.appendChild(this.webview)
     } else {
       cb && cb()
@@ -364,6 +349,9 @@ class Frame extends ImmutableComponent {
 
   componentDidMount () {
     this.updateWebview(this.onPropsChanged)
+    if (this.props.activeShortcut) {
+      this.handleShortcut()
+    }
   }
 
   get zoomLevel () {
@@ -460,7 +448,7 @@ class Frame extends ImmutableComponent {
       this.updateWebview(cb, this.props.location)
     } else {
       if (this.runOnDomReady) {
-        // there is already a callback waiting for did-attach
+        // there is already a callback waiting for guest-ready
         // so replace it with this callback because it might be a
         // mount callback which is a subset of the update callback
         this.runOnDomReady = cb
@@ -564,10 +552,20 @@ class Frame extends ImmutableComponent {
         this.onFindAgain(false)
         break
       case 'detach':
-        console.log('------deatch1')
         this.webview.detachGuest()
-        console.log('------deatch2')
-        appActions.newWindow(frameStateUtil.frameOptsFromFrame(this.frame).toJS())
+        const frameOpts = frameStateUtil.frameOptsFromFrame(this.frame).toJS()
+
+        if (this.props.activeShortcutDetails) {
+          const dropWindowId = this.props.activeShortcutDetails.get('dropWindowId') || this.props.activeShortcutDetails.getIn(['dragOverData', 'draggingOverWindowId'])
+          if (currentWindowId !== dropWindowId) {
+            appActions.newWebContentsAdded(dropWindowId, frameOpts)
+          } else {
+            appActions.newWindow(frameOpts)
+          }
+        } else {
+          appActions.newWindow(frameOpts)
+        }
+
         this.props.onCloseFrame(this.frame)
         break
     }
@@ -693,7 +691,7 @@ class Frame extends ImmutableComponent {
     this.webview.addEventListener('mouseleave', (e) => {
       currentWindowWebContents.send(messages.DISABLE_SWIPE_GESTURE)
     })
-    this.webview.addEventListener('did-attach', (e) => {
+    this.webview.addEventListener('guest-ready', (e) => {
       if (this.frame.isEmpty()) {
         return
       }

@@ -590,15 +590,6 @@ WindowStore
     downloadsToolbar: {
       isVisible: boolean // whether or not the downloads toolbar is visible
     },
-    dragging: {
-      draggingOver: {
-        dragKey: any,
-        dragType: string,
-        draggingOverLeft: boolean,
-        draggingOverRight: boolean
-      },
-      dragType: string // tab, bookmark
-    },
     hasFocus: boolean, // true if window has focus
     isClearBrowsingDataPanelVisible: boolean, // true if the Clear Browsing Data panel is visible
     isFullScreen: boolean, // true if window is fullscreen

@@ -314,9 +314,6 @@ const doAction = (action) => {
         showFullScreenWarning: action.showFullScreenWarning
       })
       break
-    case windowConstants.WINDOW_VIEW_KEY:
-      newFrame(action.frameOpts, action.openInForeground)
-      break
     case windowConstants.WINDOW_CLOSE_FRAME:
       // Use the frameProps we passed in, or default to the active frame
       const frameProps = action.frameProps || frameStateUtil.getActiveFrame(windowState)
@@ -400,13 +397,6 @@ const doAction = (action) => {
     case windowConstants.WINDOW_SET_TAB_HOVER_STATE:
       windowState = windowState.setIn(['frames', frameStateUtil.getFramePropsIndex(windowState.get('frames'), action.frameProps), 'hoverState'], action.hoverState)
       windowState = windowState.setIn(['tabs', frameStateUtil.getFramePropsIndex(windowState.get('frames'), action.frameProps), 'hoverState'], action.hoverState)
-      break
-    case windowConstants.WINDOW_SET_IS_BEING_DRAGGED_OVER_DETAIL:
-      if (!action.dragOverKey) {
-        windowState = windowState.deleteIn(['ui', 'dragging'])
-      } else {
-        windowState = windowState.mergeIn(['ui', 'dragging', 'draggingOver'], Immutable.fromJS(Object.assign({}, action.dragDetail, { dragOverKey: action.dragOverKey, dragType: action.dragType })))
-      }
       break
     case windowConstants.WINDOW_TAB_MOVE:
       const sourceFramePropsIndex = frameStateUtil.getFramePropsIndex(windowState.get('frames'), action.sourceFrameProps)
@@ -735,6 +725,7 @@ const doAction = (action) => {
       break
     case appConstants.APP_NEW_WEB_CONTENTS_ADDED:
       newFrame(action.frameOpts, action.frameOpts.openInForeground)
+      updateTabPageIndex(frameStateUtil.getActiveFrame(windowState))
       break
     default:
       break
