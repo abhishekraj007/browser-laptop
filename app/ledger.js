@@ -799,13 +799,12 @@ var enable = (paymentsEnabled) => {
       underscore.keys(synopsis.publishers).forEach((publisher) => {
         var siteSetting
 
+        excludeP(publisher)
+        inspectP(verifiedDB, verifiedPath, publisher, 'verified')
         if (typeof synopsis.publishers[publisher].options.stickyP !== 'undefined') return
 
         siteSetting = siteSettings.get(`https?://${publisher}`)
         synopsis.publishers[publisher].options.stickyP = siteSetting && siteSetting.get('ledgerPayments')
-
-        excludeP(publisher)
-        inspectP(verifiedDB, verifiedPath, publisher, 'verified')
       })
 
       updatePublisherInfo()
@@ -1113,8 +1112,6 @@ var excludeP = (publisher, callback) => {
   var doneP
 
   var done = (err, result) => {
-    console.log('\nexcludeP ' + publisher + ': errP=' + (!!err) + ' result=' + JSON.stringify(result) + ' doneP=' + doneP)
-
     doneP = true
     if ((!err) && (typeof result !== 'undefined') && (synopsis.publishers[publisher].options.exclude !== result)) {
       synopsis.publishers[publisher].options.exclude = result
@@ -1143,7 +1140,7 @@ var excludeP = (publisher, callback) => {
 
       if (underscore.intersection(data.key.split(''),
                                    [ '^', '$', '*', '+', '?', '[', '(', '{', '|' ]).length === 0) {
-        if ((data.key !== ('TLD:' + props.TLD)) && (data.key !== ('SLD:' + props.SLD))) return
+        if ((data.key !== ('TLD:' + props.TLD)) && (data.key !== ('SLD:' + props.SLD.split('.')[0]))) return
       } else {
         try {
           regexp = new RegExp(data.key.substr(4))
