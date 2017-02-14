@@ -87,11 +87,11 @@ const clientOptions = { debugP: process.env.LEDGER_DEBUG,
 
 var doneTimer
 
-var v2PublishersDB
-const v2PublishersPath = 'ledger-v2Publishers.leveldb'
+var v2RulesetDB
+const v2RulesetPath = 'ledger-rulesV2.leveldb'
 
-var verifiedDB
-const verifiedPath = 'ledger-verified.leveldb'
+var v2PublishersDB
+const v2PublishersPath = 'ledger-publishersV2.leveldb'
 
 /*
  * publisher globals
@@ -657,8 +657,8 @@ eventStore.addChangeListener(() => {
 var initialize = (paymentsEnabled) => {
   var ruleset
 
+  if (!v2RulesetDB) v2RulesetDB = levelup(pathName(v2RulesetPath))
   if (!v2PublishersDB) v2PublishersDB = levelup(pathName(v2PublishersPath))
-  if (!verifiedDB) verifiedDB = levelup(pathName(verifiedPath))
   enable(paymentsEnabled)
 
   // Check if relevant browser notifications should be shown every 15 minutes
@@ -800,7 +800,7 @@ var enable = (paymentsEnabled) => {
         var siteSetting
 
         excludeP(publisher)
-        inspectP(verifiedDB, verifiedPath, publisher, 'verified')
+        inspectP(v2PublishersDB, v2PublishersPath, publisher, 'verified')
         if (typeof synopsis.publishers[publisher].options.stickyP !== 'undefined') return
 
         siteSetting = siteSettings.get(`https?://${publisher}`)
@@ -1121,7 +1121,7 @@ var excludeP = (publisher, callback) => {
     if (callback) callback(err, result)
   }
 
-  inspectP(v2PublishersDB, v2PublishersPath, publisher, 'exclude', 'domain:' + publisher, (err, result) => {
+  inspectP(v2RulesetDB, v2RulesetPath, publisher, 'exclude', 'domain:' + publisher, (err, result) => {
     var props
 
     if (!err) return done(err, result.exclude)
@@ -1129,7 +1129,7 @@ var excludeP = (publisher, callback) => {
     props = ledgerPublisher.getPublisherProps('https://' + publisher)
     if (!props) return done()
 
-    v2PublishersDB.createReadStream({ lt: 'domain:' }).on('data', (data) => {
+    v2RulesetDB.createReadStream({ lt: 'domain:' }).on('data', (data) => {
       var regexp, result, sldP, tldP
 
       if (doneP) return
@@ -1146,19 +1146,19 @@ var excludeP = (publisher, callback) => {
           regexp = new RegExp(data.key.substr(4))
           if (!regexp.test(props[tldP ? 'TLD' : 'SLD'])) return
         } catch (ex) {
-          console.log(v2PublishersPath + ' stream invalid regexp ' + data.key + ': ' + ex.toString())
+          console.log(v2RulesetPath + ' stream invalid regexp ' + data.key + ': ' + ex.toString())
         }
       }
 
       try {
         result = JSON.parse(data.value)
       } catch (ex) {
-        console.log(v2PublishersPath + ' stream invalid JSON ' + data.entry + ': ' + data.value)
+        console.log(v2RulesetPath + ' stream invalid JSON ' + data.entry + ': ' + data.value)
       }
 
       done(null, result.exclude)
     }).on('error', (err) => {
-      console.log(v2PublishersPath + ' stream error: ' + JSON.stringify(err, null, 2))
+      console.log(v2RulesetPath + ' stream error: ' + JSON.stringify(err, null, 2))
     }).on('close', () => {
     }).on('end', () => {
       if (!doneP) done(null, false)
@@ -1168,8 +1168,8 @@ var excludeP = (publisher, callback) => {
 
 var inspectP = (db, path, publisher, property, key, callback) => {
   var done = (err, result) => {
-    if ((!err) && (typeof result !== 'undefined') && (synopsis.publishers[publisher].options[property] !== result)) {
-      synopsis.publishers[publisher].options[property] = result
+    if ((!err) && (typeof result !== 'undefined') && (synopsis.publishers[publisher].options[property] !== result[property])) {
+      synopsis.publishers[publisher].options[property] = result[property]
       updatePublisherInfo()
     }
 
@@ -1178,9 +1178,21 @@ var inspectP = (db, path, publisher, property, key, callback) => {
 
   if (!key) key = publisher
   db.get(key, (err, value) => {
-    if ((err) && (!err.notFound)) console.log(path + ' get ' + key + ' error: ' + JSON.stringify(err, null, 2))
+    var result
 
-    done(err, (!err))
+    if (err) {
+      if (!err.notFound) console.log(path + ' get ' + key + ' error: ' + JSON.stringify(err, null, 2))
+      return done(err)
+    }
+
+    try {
+      result = JSON.parse(value)
+    } catch (ex) {
+      console.log(v2RulesetPath + ' stream invalid JSON ' + key + ': ' + value)
+      result = {}
+    }
+
+    done(null, result)
   })
 }
 
@@ -1325,7 +1337,7 @@ var updateLedgerInfo = () => {
 var logs = []
 
 var callback = (err, result, delayTime) => {
-  var i, then
+  var i, results, then
   var entries = client && client.report()
   var now = underscore.now()
 
@@ -1362,38 +1374,42 @@ var callback = (err, result, delayTime) => {
   }
   cacheRuleSet(result.ruleset)
   if (result.rulesetV2) {
+    results = result.rulesetV2
+    delete result.rulesetV2
+
     entries = []
-    result.rulesetV2.forEach((rule) => {
+    results.forEach((entry) => {
       entries.push({ type: 'put',
-                     key: rule.facet + ':' + rule.publisher,
-                     value: JSON.stringify(underscore.omit(rule, [ 'facet', 'publisher' ]))
+                     key: entry.facet + ':' + entry.publisher,
+                     value: JSON.stringify(underscore.omit(entry, [ 'facet', 'publisher' ]))
                    })
     })
-    v2PublishersDB.batch(entries, (err) => {
-      if (err) return console.log(v2PublishersPath + ' error: ' + JSON.stringify(err, null, 2))
+
+    v2RulesetDB.batch(entries, (err) => {
+      if (err) return console.log(v2RulesetPath + ' error: ' + JSON.stringify(err, null, 2))
 
       underscore.keys(synopsis.publishers).forEach((publisher) => { excludeP(publisher) })
     })
-    delete result.rulesetV2
   }
-  if (result.verifiedPublishers) {
-    result.verifiedPublishers.forEach((publisher) => {
-      if ((synopsis.publishers[publisher]) && (!synopsis.publishers[publisher].options.verified)) {
-        synopsis.publishers[publisher].options.verified = true
+  if (result.publishersV2) {
+    results = result.publishersV2
+    delete result.publishersV2
+
+    entries = []
+    results.forEach((entry) => {
+      entries.push({ type: 'put',
+                     key: entry.publisher,
+                     value: JSON.stringify(underscore.omit(entry, [ 'publisher' ]))
+                   })
+      if ((synopsis.publishers[entry.publisher]) &&
+          (synopsis.publishers[entry.publisher].options.verified !== entry.verified)) {
+        synopsis.publishers[entry.publisher].options.verified = entry.verified
         updatePublisherInfo()
       }
-
-      verifiedDB.get(publisher, (err, value) => {
-        if (err) {
-          if (!err.notFound) return console.log(verifiedPath + ' get ' + publisher + ' error: ' + JSON.stringify(err, null, 2))
-
-          verifiedDB.put(publisher, 'null', (err) => {
-            if (err) return console.log(verifiedPath + ' put ' + publisher + ' error: ' + JSON.stringify(err, null, 2))
-          })
-        }
-      })
     })
-    delete result.verifiedPublishers
+    v2PublishersDB.batch(entries, (err) => {
+      if (err) return console.log(v2PublishersPath + ' error: ' + JSON.stringify(err, null, 2))
+    })
   }
 
   atomicWriter(pathName(statePath), result, { flushP: true }, () => {})
