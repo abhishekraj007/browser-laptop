@@ -197,6 +197,7 @@ const doAction = (action) => {
         if (publisherInfo._internal.verboseP) console.log('\nupdating ' + publisher + ' stickyP=' + action.value)
         synopsis.publishers[publisher].options.stickyP = action.value
         updatePublisherInfo()
+        verifiedP(publisher)
       }
       break
 
@@ -800,7 +801,7 @@ var enable = (paymentsEnabled) => {
         var siteSetting
 
         excludeP(publisher)
-        inspectP(v2PublishersDB, v2PublishersPath, publisher, 'verified')
+        verifiedP(publisher)
         if (typeof synopsis.publishers[publisher].options.stickyP !== 'undefined') return
 
         siteSetting = siteSettings.get(`https?://${publisher}`)
@@ -1037,6 +1038,7 @@ var visit = (location, timestamp, tabId) => {
     }
     synopsis.addPublisher(publisher, { duration: duration, revisitP: revisitP })
     updatePublisherInfo()
+    verifiedP(publisher)
   }
 
   setLocation()
@@ -1164,6 +1166,10 @@ var excludeP = (publisher, callback) => {
       if (!doneP) done(null, false)
     })
   })
+}
+
+var verifiedP = (publisher, callback) => {
+  inspectP(v2PublishersDB, v2PublishersPath, publisher, 'verified', null, callback)
 }
 
 var inspectP = (db, path, publisher, property, key, callback) => {
