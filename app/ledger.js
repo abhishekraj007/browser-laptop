@@ -240,6 +240,14 @@ var quit = () => {
   visit('NOOP', underscore.now(), null)
   clearInterval(doneTimer)
   doneWriter()
+  if (v2RulesetDB) {
+    v2RulesetDB.close()
+    v2RulesetDB = null
+  }
+  if (v2PublishersDB) {
+    v2PublishersDB.close()
+    v2PublishersDB = null
+  }
 }
 
 var boot = () => {
@@ -540,6 +548,7 @@ underscore.keys(fileTypes).forEach((fileType) => {
 signatureMax = Math.ceil(signatureMax * 1.5)
 
 eventStore.addChangeListener(() => {
+  var initP
   const eventState = eventStore.getState().toJS()
   var view = eventState.page_view
   var info = eventState.page_info
@@ -571,11 +580,14 @@ eventStore.addChangeListener(() => {
 
     publisher = page.publisher
     pattern = `https?://${publisher}`
-    if (((!synopsis.publishers[publisher]) || synopsis.publishers[publisher].options.exclude) &&
-        (!getSetting(settings.AUTO_SUGGEST_SITES))) {
-      appActions.changeSiteSetting(pattern, 'ledgerPayments', false)
-    }
+    initP = !synopsis.publishers[publisher]
     synopsis.initPublisher(publisher)
+    if ((initP) && (getSetting(settings.AUTO_SUGGEST_SITES))) {
+      excludeP(publisher, (unused, exclude) => {
+        appActions.changeSiteSetting(pattern, 'ledgerPayments', !exclude)
+        updatePublisherInfo()
+      })
+    }
     entry = synopsis.publishers[publisher]
     if ((page.protocol) && (!entry.protocol)) entry.protocol = page.protocol
 
@@ -915,8 +927,8 @@ var synopsisNormalizer = () => {
 
   results = []
   underscore.keys(synopsis.publishers).forEach((publisher) => {
-    if ((getSetting(settings.AUTO_SUGGEST_SITES)) && (!synopsis.publishers[publisher].options.stickyP)) {
-      if ((synopsis.publishers[publisher].options.exclude === false) ||
+    if (!synopsis.publishers[publisher].options.stickyP) {
+      if ((synopsis.publishers[publisher].options.exclude === true) ||
           (synopsis.publishers[publisher].scores[scorekeeper] <= 0) ||
           (synopsis.options.minPublisherDuration > synopsis.publishers[publisher].duration) ||
           (synopsis.options.minPublisherVisits > synopsis.publishers[publisher].visits)) return
@@ -1115,7 +1127,8 @@ var excludeP = (publisher, callback) => {
 
   var done = (err, result) => {
     doneP = true
-    if ((!err) && (typeof result !== 'undefined') && (synopsis.publishers[publisher].options.exclude !== result)) {
+    if ((!err) && (typeof result !== 'undefined') && (!!synopsis.publishers[publisher]) &&
+        (synopsis.publishers[publisher].options.exclude !== result)) {
       synopsis.publishers[publisher].options.exclude = result
       updatePublisherInfo()
     }
@@ -1174,7 +1187,8 @@ var verifiedP = (publisher, callback) => {
 
 var inspectP = (db, path, publisher, property, key, callback) => {
   var done = (err, result) => {
-    if ((!err) && (typeof result !== 'undefined') && (synopsis.publishers[publisher].options[property] !== result[property])) {
+    if ((!err) && (typeof result !== 'undefined') && (!!synopsis.publishers[publisher]) &&
+        (synopsis.publishers[publisher].options[property] !== result[property])) {
       synopsis.publishers[publisher].options[property] = result[property]
       updatePublisherInfo()
     }
@@ -1509,8 +1523,7 @@ var run = (delayTime) => {
       var siteSetting = siteSettings.get(`https?://${winner}`)
 
       if ((siteSetting) &&
-          (siteSetting.get('ledgerPayments') === false ||
-           siteSetting.get('ledgerPaymentsShown') === false)) return
+          (siteSetting.get('ledgerPayments') === false || siteSetting.get('ledgerPaymentsShown') === false)) return
 
       result = client.vote(winner)
       if (result) state = result
