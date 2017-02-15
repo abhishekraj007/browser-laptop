@@ -652,6 +652,18 @@ Dispatches a message when a tab is being cloned
 
 
 
+### setNoScriptExceptions(hostPattern, origins) 
+
+Dispatches a message when noscript exceptions are added for an origin
+
+**Parameters**
+
+**hostPattern**: `string`, Dispatches a message when noscript exceptions are added for an origin
+
+**origins**: `Object.&lt;string, (boolean|number)&gt;`, Dispatches a message when noscript exceptions are added for an origin
+
+
+
 
 * * *
 

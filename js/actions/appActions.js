@@ -800,6 +800,19 @@ const appActions = {
       tabId,
       options
     })
+  },
+
+  /**
+   * Dispatches a message when noscript exceptions are added for an origin
+   * @param {string} hostPattern
+   * @param {Object.<string, (boolean|number)>} origins
+   */
+  setNoScriptExceptions: function (hostPattern, origins) {
+    AppDispatcher.dispatch({
+      actionType: appConstants.APP_SET_NOSCRIPT_EXCEPTIONS,
+      hostPattern,
+      origins
+    })
   }
 
 }
